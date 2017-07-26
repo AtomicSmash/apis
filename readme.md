@@ -1,12 +1,21 @@
 # Apis
 
+## Installing
+
+To install add this to your composer file:
+
+```
+"atomicsmash/apis" : "dev-master"
+```
+
+
 ## Setup Twitter API
 
 Create a twitter app and generate API access keys from https://apps.twitter.com/.
 
 Then add these inside your environment specific constants to your wp-config file:
 
-```
+```php
 define('TWITTER_CONSUMER_KEY','xxxxxxxxxxxxxxxxxxx');
 define('TWITTER_CONSUMER_SECRET','xxxxxxxxxxxxxxxxxxx');
 define('TWITTER_OAUTH_TOKEN','xxxxxxxxxxxxxxxxxxx');
