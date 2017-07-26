@@ -3,7 +3,6 @@
   "description": "Atomic Smash - Atomis APIS",
   "keywords": ["wordpress", "plugin", "apis", "Twitter"],
   "homepage": "http://www.atomicsmash.co.uk/",
-  "license": "This software is NOT to be distributed, but can be INCLUDED in WP themes: Premium or Contracted.",
   "authors": [
     {
       "name": "Atomic Smash Apis",
