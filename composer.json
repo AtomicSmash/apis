@@ -13,12 +13,8 @@
   ],
   "type": "wordpress-plugin",
   "require": {
-    "composer/installers": "v1.0.6",
-        "guzzlehttp/guzzle": "~6.0",
-        "guzzlehttp/oauth-subscriber": "0.3.*"
+      "composer/installers": "v1.0.6",
+      "guzzlehttp/guzzle": "~6.0",
+      "guzzlehttp/oauth-subscriber": "0.3.*"
   },
-  "dist": {
-        "url": "git@clients.atomicsmash.co.uk:atomicsmash/atomic-apis.git",
-        "type": "tar"
-    }
 }
