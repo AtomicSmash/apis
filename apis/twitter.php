@@ -270,9 +270,12 @@ class atomic_api {
         $this->recordArray = $wpdb->get_results($fullSql , 'ARRAY_A');
 		// $this->recordArray = $wpdb->get_results($fullSql);
 
-		// echo "<pre>";
-		// print_r($this->recordArray);
-		// echo "</pre>";
+
+		if(count($this->recordArray) > 0){
+			foreach($this->recordArray as $key => $tweet){
+				$this->recordArray[$key]['human_time_ago'] = $this->human_elapsed_time($this->recordArray[$key]['created_at']);
+			}
+		}
 
 		return $this->recordArray;
 
@@ -440,6 +443,34 @@ class atomic_api {
 		return "updated";
 	}
 
+	public function human_elapsed_time($datetime, $full = false) {
+	    $now = new DateTime;
+	    $ago = new DateTime($datetime);
+	    $diff = $now->diff($ago);
+
+	    $diff->w = floor($diff->d / 7);
+	    $diff->d -= $diff->w * 7;
+
+	    $string = array(
+	        'y' => 'year',
+	        'm' => 'month',
+	        'w' => 'week',
+	        'd' => 'day',
+	        'h' => 'hour',
+	        'i' => 'minute',
+	        's' => 'second',
+	    );
+	    foreach ($string as $k => &$v) {
+	        if ($diff->$k) {
+	            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+	        } else {
+	            unset($string[$k]);
+	        }
+	    }
+
+	    if (!$full) $string = array_slice($string, 0, 1);
+	    return $string ? implode(', ', $string) . ' ago' : 'just now';
+	}
 
 }
 

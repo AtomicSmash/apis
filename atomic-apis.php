@@ -3,7 +3,7 @@
 Plugin Name: Atomic Smash - APIs
 Plugin URI: http://www.atomicsmash.co.uk
 Description: Pull from APIs like Twitter
-Version: 0.0.5
+Version: 0.0.6
 Author: Atomic Smash
 Author URI: n/a
 */
