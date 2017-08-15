@@ -115,7 +115,7 @@ class atomic_api {
 	// GET Functions
 	public function setupMenus() {
 
-        add_submenu_page("tools.php", 'Twitter API', 'Twitter API', 'manage_options', 'atomic_apis', array($this,'apiListPage'));
+        add_submenu_page("tools.php", 'Twitter API', 'Twitter API', 'manage_options', 'atomic_apis_twitter', array($this,'apiListPage'));
 
 
 	}
@@ -158,12 +158,6 @@ class atomic_api {
 
 		    	$placeListTable->prepare_items();
 
-				?>
-				<!-- <form method="get"> -->
-					<!-- <input type="hidden" name="page" value="<?php //echo $_REQUEST['page'] ?>"/> -->
-					<?php //$placeListTable->search_box( 'Search', 'your-element-id' ); ?>
-				<!-- </form> -->
-				<?php
 
 
 	            $placeListTable->items = $this->recordArray;
@@ -497,22 +491,21 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 }
 
 
-//Use this page as a ref: http://wpengineer.com/2426/wp_list_table-a-step-by-step-guide/
 //Need to sort pagination
 
 class Atomic_Api_List_Table extends WP_List_Table {
 
-	function __construct($columns = array()){
-
-        $this->columns = $columns;
-
-        parent::__construct( array(
-			'singular'  => 'item',  //singular name of the listed records
-			'plural'    => 'items', //plural name of the listed records
-			'ajax'      => false    //does this table support ajax?
-		) );
-
-	}
+	// function __construct($columns = array()){
+	//
+    //     $this->columns = $columns;
+	//
+    //     parent::__construct( array(
+	// 		'singular'  => 'item',  //singular name of the listed records
+	// 		'plural'    => 'items', //plural name of the listed records
+	// 		'ajax'      => false    //does this table support ajax?
+	// 	) );
+	//
+	// }
 
 	//Setup column defaults
 	function column_default($item, $column_name){
@@ -531,15 +524,72 @@ class Atomic_Api_List_Table extends WP_List_Table {
 	}
 
 
-	// Prep data for display
+	/**
+	 * Prepare the items for the table to process
+	 */
 	function prepare_items() {
         //Get api items from Atomic_Api_Entry_List
 
-        $columns = $this->columns;
-        $hidden = array();
-        $sortable = array();
-        $this->_column_headers = array($columns, $hidden, $sortable);
+        // $columns = $this->columns;
+        // $hidden = array();
+        // $sortable = array();
+        // $this->_column_headers = array($columns, $hidden, $sortable);
+
+		$columns = $this->get_columns();
+		$hidden = array();
+		$sortable = $this->get_sortable_columns();
+
+		// Get the data
+		$data = $this->table_data();
+		// usort( $data, array( &$this, 'sort_data' ) );
+
+		$items_per_page = 100;
+		$currentPage = $this->get_pagenum();
+		$total_items = count($data);
+
+		$this->set_pagination_args( array(
+			'total_items' => $total_items,
+			'per_page'    => $items_per_page
+		) );
+
+		// $data = array_slice( $data, ( ($currentPage - 1 ) * $items_per_page ), $items_per_page );
+		$this->_column_headers = array( $columns, $hidden, $sortable );
+		$this->items = $data;
+
 
 	}
+
+	/**
+	 * Override the parent columns method. Defines the columns to use in your listing table
+	 *
+	 * @return Array $columns, the array of columns to use with the table
+	 */
+	function get_columns() {
+
+		$columns = array(
+			'tweet'    => 'Tweet',
+            'user_handle'      => 'Username',
+            'user_image'      => 'Profile Image',
+            'user_location'      => 'Location'
+		);
+
+		return $columns;
+
+	}
+
+	public function get_sortable_columns() {
+
+		// return empty array to block sorting
+		return array();
+
+		// return array(
+		// 	'tweet' => array( 'tweet', false ),
+		// 	'user_handle' => array( 'user_handle', false ),
+		// 	'user_image' => array( 'user_image', false ),
+		// 	'user_location' => array( 'user_location', false )
+		// );
+	}
+
+
 
 }
