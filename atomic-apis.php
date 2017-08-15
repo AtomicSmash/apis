@@ -15,7 +15,6 @@ function register_session(){
         session_start();
 }
 add_action('init','register_session');
-// add_action( 'admin_menu', 'baseMenuPage' );
 
 
 // require 'vendor/autoload.php';
@@ -24,10 +23,10 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 }
 
 include('apis/twitter.php');
-// include('apis/instagram.php');
+include('apis/instagram.php');
 
+$twitter_api = new atomic_api_twitter();
+$instagram_api = new atomic_api_instagram();
 
-$twitterAPI = new atomic_api();
-
-register_activation_hook( __FILE__, array ( $twitterAPI, 'create_table') );
-register_deactivation_hook( __FILE__, array ( $twitterAPI, 'delete_table') );
+register_activation_hook( __FILE__, array ( $twitter_api, 'create_table') );
+register_deactivation_hook( __FILE__, array ( $twitter_api, 'delete_table') );

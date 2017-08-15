@@ -4,7 +4,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
 
-class atomic_api {
+class atomic_api_twitter {
 
 
 	public $type = '';
@@ -152,7 +152,7 @@ class atomic_api {
 	            $entries = $this->get();
 
 
-		    	$placeListTable = new Atomic_Api_List_Table($this->columns);
+		    	$placeListTable = new Atomic_Api_List_Table_Twitter($this->columns);
 
 	            echo '<h2>Twitter API <a href="admin.php?page=atomic_apis&sync=1" class="add-new-h2">Sync</a></h2>';
 
@@ -493,7 +493,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 //Need to sort pagination
 
-class Atomic_Api_List_Table extends WP_List_Table {
+class Atomic_Api_List_Table_Twitter extends WP_List_Table {
 
 	// function __construct($columns = array()){
 	//
