@@ -4,7 +4,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
 
-class atomic_api {
+class atomic_instagram_api {
 
 
 	public $type = '';
@@ -47,10 +47,13 @@ class atomic_api {
 
 		add_action( 'api_hourly_sync',  array($this,'pull' ));
 
-
+		// public function __construct() {
+		    // add_action( 'admin_menu', [$this, 'add_monolog_viewer_adnin_to_tools_menu']);
+		// }
 
 
 	}
+
 
 	/**
 	 * Setup table for API
@@ -115,13 +118,13 @@ class atomic_api {
 	// GET Functions
 	public function setupMenus() {
 
-        add_submenu_page("tools.php", 'Twitter API', 'Twitter API', 'manage_options', 'atomic_apis', array($this,'apiListPage'));
-
+        // add_submenu_page("atomic_apis", 'Twitter', 'Twitter', 'edit_posts', 'atomic_apis', array($this,'apiListPage'));
+		add_submenu_page( 'tools.php', 'Instagram API', 'Instagram API', 'manage_options', 'atomic_apis_instagram', array( $this, 'api_list_page' ) );
 
 	}
 
 
-    public function apiListPage() {
+    public function api_list_page() {
 
 
         echo '<div class="wrap">';
@@ -475,71 +478,4 @@ class atomic_api {
 
 }
 
-
-if ( defined( 'WP_CLI' ) && WP_CLI ) {
-    /**
-     * Grab info from APIs
-     *
-     * wp atomicsmash create_dates_varient todayÊ
-     */
-    class AS_API_CLI extends WP_CLI_Command {
-
-
-        public function sync_tweets($order_id = ""){
-
-
-
-        }
-    }
-
-    WP_CLI::add_command( 'APIs', 'AS_API_CLI' );
-
-}
-
-
-//Use this page as a ref: http://wpengineer.com/2426/wp_list_table-a-step-by-step-guide/
-//Need to sort pagination
-
-class Atomic_Api_List_Table extends WP_List_Table {
-
-	function __construct($columns = array()){
-
-        $this->columns = $columns;
-
-        parent::__construct( array(
-			'singular'  => 'item',  //singular name of the listed records
-			'plural'    => 'items', //plural name of the listed records
-			'ajax'      => false    //does this table support ajax?
-		) );
-
-	}
-
-	//Setup column defaults
-	function column_default($item, $column_name){
-        switch( $column_name ) {
-			// case 'tweet':
-            // case 'added_at':
-            // case 'user_location':
-            // return $item[ $column_name ];
-			case 'user_image':
-			return "<img src='".$item[ $column_name ]."' />";
-			case 'user_handle':
-			return "@".$item[ $column_name ];
-          default:
-            return $item[ $column_name ]; //Show the whole array for troubleshooting purposes
-        }
-	}
-
-
-	// Prep data for display
-	function prepare_items() {
-        //Get api items from Atomic_Api_Entry_List
-
-        $columns = $this->columns;
-        $hidden = array();
-        $sortable = array();
-        $this->_column_headers = array($columns, $hidden, $sortable);
-
-	}
-
-}
+new atomic_instagram_api;
