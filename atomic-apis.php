@@ -25,6 +25,8 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
 include('apis/twitter.php');
 include('apis/instagram.php');
 
+require 'vendor/autoload.php';
+
 $twitter_api = new atomic_api_twitter();
 $instagram_api = new atomic_api_instagram();
 

@@ -66,7 +66,7 @@ class atomic_api_instagram {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 
-        $table_name = $wpdb->prefix . 'api_twitter';
+        $table_name = $wpdb->prefix . 'api_instgram';
         $sql = "CREATE TABLE $table_name (
             id BIGINT(20) NOT NULL,
             tweet text,
@@ -82,7 +82,7 @@ class atomic_api_instagram {
     		UNIQUE KEY id (id)
     	) $charset_collate;";
 
-        dbDelta( $sql );
+        // dbDelta( $sql );
 
 		return true;
 
@@ -117,7 +117,6 @@ class atomic_api_instagram {
 
         add_submenu_page("tools.php", 'Instagram API', 'Instagram API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
 
-
 	}
 
 
@@ -128,7 +127,7 @@ class atomic_api_instagram {
 
 			if( !defined('TWITTER_CONSUMER_KEY') ){
 
-				echo '<h2>Twitter API</h2>';
+				echo '<h2>Instagram API</h2>';
 
 				echo "Looks like you need to add these Constants to your config file:";
 
@@ -154,7 +153,7 @@ class atomic_api_instagram {
 
 		    	$placeListTable = new Atomic_Api_List_Table_Instagram($this->columns);
 
-	            echo '<h2>Twitter API <a href="admin.php?page=atomic_apis&sync=1" class="add-new-h2">Sync</a></h2>';
+	            echo '<h2>Instagram API <a href="tools.php?page=atomic_apis_instagram&sync=1" class="add-new-h2">Sync</a></h2>';
 
 		    	$placeListTable->prepare_items();
 
@@ -302,6 +301,40 @@ class atomic_api_instagram {
 	 */
     public function pull() {
 
+		// https://www.sitepoint.com/conquering-instagram-with-php-and-the-instagram-api/
+		// https://stackoverflow.com/questions/37496657/how-to-use-instagram-api-with-guzzle-6-and-laravel
+		// https://api.instagram.com/oauth/authorize?client_id={$client_id}&redirect_uri={$redirect_url}&scope=basic&response_type=code
+
+		echo "Yo";
+
+
+		$client = new Client();
+
+
+		// $response = $client->post('https://api.instagram.com/oauth/access_token', array('body' => array(
+        //     'client_id' => CLIENT_ID,
+        //     'client_secret' => CLIENT_SECRET,
+        //     'grant_type' => 'authorization_code',
+        //     'redirect_uri' => REDIRECT_URL,
+        //     'code' => CODE
+        // )));
+		//
+        // $data = $response->json();
+
+		$response = $client->get('https://api.instagram.com/v1/users/self/media/recent', [
+		    'query' => [
+		        'access_token' => CODE
+		    ]
+		]);
+	      $results = $response->getBody()->getContents();
+
+		echo "<pre>";
+		print_r($results);
+		echo "</pre>";
+
+
+
+		die();
 
 		$stack = HandlerStack::create();
 
@@ -479,7 +512,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
     class AS_API_CLI extends WP_CLI_Command {
 
 
-        public function sync_tweets($order_id = ""){
+        public function sync_instagram($order_id = ""){
 
 
 
