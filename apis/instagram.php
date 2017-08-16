@@ -69,20 +69,21 @@ class atomic_api_instagram {
         $table_name = $wpdb->prefix . 'api_instgram';
         $sql = "CREATE TABLE $table_name (
             id BIGINT(20) NOT NULL,
-            tweet text,
+            caption text,
+            type varchar(30) NOT NULL,
+			link varchar(130) NOT NULL,
+			size_150 varchar(200) NOT NULL,
+			size_320 varchar(200) NOT NULL,
+			size_640 varchar(200) NOT NULL,
+			full varchar(200) NOT NULL,
             added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP NOT NULL,
             updated_at TIMESTAMP NOT NULL,
-            user_id BIGINT(22) NOT NULL,
-            user_name varchar(26) NOT NULL,
-            user_handle varchar(26) NOT NULL,
-    		user_image varchar(130) NOT NULL,
-            user_location varchar(130) NOT NULL,
             hidden BOOLEAN NOT NULL,
     		UNIQUE KEY id (id)
     	) $charset_collate;";
 
-        // dbDelta( $sql );
+        dbDelta( $sql );
 
 		return true;
 
@@ -354,23 +355,32 @@ class atomic_api_instagram {
 
 		$results = $response->getBody()->getContents();
 
-		echo "<pre>";
-		print_r($results);
-		echo "</pre>";
+		// echo "<pre>";
+		// print_r($results);
+		// echo "</pre>";
 
 		$results = json_decode($results);
 
 
-		// echo "<pre>";
-		// print_r($results->data);
-		// echo "</pre>";
+		echo "<pre>";
+		print_r($results->data);
+		echo "</pre>";
 
 		foreach($results->data as $feed){
 			echo "<img src='".$feed->images->standard_resolution->url."' />";
+			echo $feed->created_time;
+			echo "<br>";
+			echo $feed->caption->text;
+			echo "<br>";
+			echo $feed->link;
+			echo "<br>";
+			echo $feed->type;
+			echo "<br>";
+			echo $feed->id;
+			echo "<br>";
 		};
 
 		die();
-
 
 
 
@@ -380,9 +390,6 @@ class atomic_api_instagram {
 
 		};
 
-		// echo "<pre>";
-		// print_r(json_decode($tweets));
-		// echo "</pre>";
 
 		return $decodedContent;
 

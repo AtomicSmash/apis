@@ -327,16 +327,11 @@ class atomic_api_twitter {
 		$decodedContent = json_decode($tweets);
 
 
-
 		foreach ($decodedContent as $key => $entry) {
 
 			$this->processEntry($entry);
 
 		};
-
-		// echo "<pre>";
-		// print_r(json_decode($tweets));
-		// echo "</pre>";
 
 		return $decodedContent;
 

@@ -32,3 +32,5 @@ $instagram_api = new atomic_api_instagram();
 
 register_activation_hook( __FILE__, array ( $twitter_api, 'create_table') );
 register_deactivation_hook( __FILE__, array ( $twitter_api, 'delete_table') );
+register_activation_hook( __FILE__, array ( $instagram_api, 'create_table') );
+register_deactivation_hook( __FILE__, array ( $instagram_api, 'delete_table') );
