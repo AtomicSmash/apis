@@ -305,7 +305,32 @@ class atomic_api_instagram {
 		// https://stackoverflow.com/questions/37496657/how-to-use-instagram-api-with-guzzle-6-and-laravel
 		// https://api.instagram.com/oauth/authorize?client_id={$client_id}&redirect_uri={$redirect_url}&scope=basic&response_type=code
 
-		echo "Yo";
+
+		echo "<a href='https://www.instagram.com/developer/'>App page</a>";
+
+		echo "<br>";
+
+
+
+
+		echo "<form action='https://api.instagram.com/oauth/authorize'>";
+
+			echo "<table class='form-table'><tbody>";
+				echo "<tr>";
+					echo "<th scope='row'><label for='blogname'>Client ID</label></th>";
+					echo "<td><input name='client_id' /></td>";
+				echo "</tr>";
+			echo "</tbody></table>";
+
+			echo "<input type='submit' class='button button-primary' />";
+			echo "<input name='redirect_uri' value='".admin_url('tools.php?page=atomic_apis_instagram')."' type='hidden' />";
+			echo "<input name='scope' value='basic' type='hidden' />";
+			echo "<input name='response_type' value='code' type='hidden' />";
+
+		echo "</form>";
+
+
+
 
 
 		$client = new Client();
@@ -326,38 +351,26 @@ class atomic_api_instagram {
 		        'access_token' => CODE
 		    ]
 		]);
-	      $results = $response->getBody()->getContents();
+
+		$results = $response->getBody()->getContents();
 
 		echo "<pre>";
 		print_r($results);
 		echo "</pre>";
 
+		$results = json_decode($results);
 
+
+		// echo "<pre>";
+		// print_r($results->data);
+		// echo "</pre>";
+
+		foreach($results->data as $feed){
+			echo "<img src='".$feed->images->standard_resolution->url."' />";
+		};
 
 		die();
 
-		$stack = HandlerStack::create();
-
-		$middleware = new Oauth1([
-			'consumer_key'  => TWITTER_CONSUMER_KEY,
-			'consumer_secret' => TWITTER_CONSUMER_SECRET,
-			'token'       => TWITTER_OAUTH_TOKEN,
-			'token_secret'  => TWITTER_OAUTH_TOKEN_SECRET
-		]);
-
-
-		$stack->push($middleware);
-
-		$client = new Client([
-			'base_uri' => 'https://api.twitter.com/1.1/',
-			'handler' => $stack
-		]);
-
-		$response = $client->get('statuses/user_timeline.json', ['auth' => 'oauth']);
-
-		$tweets = $response->getBody()->getContents();
-
-		$decodedContent = json_decode($tweets);
 
 
 
