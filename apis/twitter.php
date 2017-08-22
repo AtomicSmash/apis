@@ -328,14 +328,15 @@ class atomic_api {
 		// Pull from hashtag if it's defined
 		if( defined('TWITTER_HASHTAG') ){
 			$response = $client->get('search/tweets.json?q='.urlencode('#futurecity17'), ['auth' => 'oauth']);
+			$tweets = $response->getBody()->getContents();
+			$decodedContent = json_decode($tweets);
+			// Search results return a slightly different object
+			$decodedContent = $decodedContent->statuses;
 		}else{
 			$response = $client->get('statuses/user_timeline.json', ['auth' => 'oauth']);
+			$tweets = $response->getBody()->getContents();
+			$decodedContent = json_decode($tweets);
 		}
-
-		$tweets = $response->getBody()->getContents();
-
-		$decodedContent = json_decode($tweets);
-
 
 
 		foreach ($decodedContent as $key => $entry) {
