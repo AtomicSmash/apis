@@ -325,7 +325,12 @@ class atomic_api {
 			'handler' => $stack
 		]);
 
-		$response = $client->get('statuses/user_timeline.json', ['auth' => 'oauth']);
+		// Pull from hashtag if it's defined
+		if( defined('TWITTER_HASHTAG') ){
+			$response = $client->get('search/tweets.json?q='.urlencode('#futurecity17'), ['auth' => 'oauth']);
+		}else{
+			$response = $client->get('statuses/user_timeline.json', ['auth' => 'oauth']);
+		}
 
 		$tweets = $response->getBody()->getContents();
 
