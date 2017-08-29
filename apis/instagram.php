@@ -31,7 +31,7 @@ class atomic_api_instagram {
 	public function __construct() {
 		global $wpdb;
 
-		$this->api_table = $wpdb->prefix . 'api_twitter';
+		$this->api_table = $wpdb->prefix . 'api_instagram';
 
         $this->columns =  array(
             'tweet'    => 'Tweet',
@@ -43,13 +43,7 @@ class atomic_api_instagram {
 
         //$this->setupMenus();
         add_action( 'admin_menu', array( $this, 'setupMenus') );
-
-
 		add_action( 'api_hourly_sync',  array($this,'pull' ));
-
-
-
-
 	}
 
 	/**
@@ -66,16 +60,15 @@ class atomic_api_instagram {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 
-        $table_name = $wpdb->prefix . 'api_instgram';
+        $table_name = $this->api_table;
         $sql = "CREATE TABLE $table_name (
-            id BIGINT(20) NOT NULL,
+            id INT(20) NOT NULL auto_increment,
             caption text,
             type varchar(30) NOT NULL,
 			link varchar(130) NOT NULL,
 			size_150 varchar(200) NOT NULL,
 			size_320 varchar(200) NOT NULL,
 			size_640 varchar(200) NOT NULL,
-			full varchar(200) NOT NULL,
             added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP NOT NULL,
             updated_at TIMESTAMP NOT NULL,
@@ -311,9 +304,6 @@ class atomic_api_instagram {
 
 		echo "<br>";
 
-
-
-
 		echo "<form action='https://api.instagram.com/oauth/authorize'>";
 
 			echo "<table class='form-table'><tbody>";
@@ -362,29 +352,55 @@ class atomic_api_instagram {
 		$results = json_decode($results);
 
 
-		echo "<pre>";
-		print_r($results->data);
-		echo "</pre>";
+
+
+		// id BIGINT(20) NOT NULL,
+		// caption text,
+		// type varchar(30) NOT NULL,
+		// link varchar(130) NOT NULL,
+		// size_150 varchar(200) NOT NULL,
+		// size_320 varchar(200) NOT NULL,
+		// size_640 varchar(200) NOT NULL,
+		// full varchar(200) NOT NULL,
+		// added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+		// echo "<pre>";
+		// print_r($results->data);
+		// echo "</pre>";
+
 
 		foreach($results->data as $feed){
-			echo "<img src='".$feed->images->standard_resolution->url."' />";
-			echo $feed->created_time;
-			echo "<br>";
-			echo $feed->caption->text;
-			echo "<br>";
-			echo $feed->link;
-			echo "<br>";
-			echo $feed->type;
-			echo "<br>";
-			echo $feed->id;
-			echo "<br>";
+			// echo "<img src='".$feed->images->standard_resolution->url."' />";
+			// echo $feed->id;
+			// echo "<br>";
+			// echo html_entity_decode(stripslashes(str_replace('_', '', $feed->id ) ), ENT_QUOTES);
+			// echo "<br>";
+			// echo $feed->images->standard_resolution->url;
+			// echo "<br>";
+			// echo $feed->images->low_resolution->url;
+			// echo "<br>";
+			// echo $feed->images->thumbnail->url;
+			// echo "<br>";
+			// echo $feed->created_time;
+			// echo "<br>";
+			// echo $feed->caption->text;
+			// echo "<br>";
+			// echo $feed->link;
+			// echo "<br>";
+			// echo $feed->type;
+			// echo "<hr>";
+
 		};
+		//
+		// die();
 
-		die();
+		// echo "<pre>";
+		// print_r($results->data);
+		// echo "</pre>";
 
 
 
-		foreach ($decodedContent as $key => $entry) {
+		foreach ($results->data as $key => $entry) {
 
 			$this->processEntry($entry);
 
@@ -402,6 +418,10 @@ class atomic_api_instagram {
 	 * @return [type]        [description]
 	 */
 	public function processEntry($entry=array()) {
+
+		echo $entry->id;
+		echo "<hr>";
+
 
 		if($this->exist($entry->id) == true){
 			return $this->updateEntry($entry);
@@ -438,22 +458,31 @@ class atomic_api_instagram {
 		global $wpdb;
 		$wpdb->show_errors();
 
+		// echo "<pre>";
+		// print_r($entry);
+		// echo "</pre>";
+
+
+
+		echo date( "Y-m-d h:i:s", $entry->created_time);
+		echo "<hr>";
+
 
 		$wpdb->insert($this->api_table,
 			array(
-				'id' => $entry->id,																				// d
-				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'created_at' => date( "Y-m-d h:i:s", strtotime($entry->created_at)),							// s
-				'updated_at' => date( "Y-m-d h:i:s", time()),													// s
-				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
-				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
-				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
-				'user_image' => html_entity_decode(stripslashes($entry->user->profile_image_url), ENT_QUOTES),	// s
-				'user_location' => html_entity_decode(stripslashes($entry->user->location), ENT_QUOTES),		// s
+				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
+				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
+				'added_at' => date( "Y-m-d h:i:s", $entry->created_time),									// s
+				'created_at' => date( "Y-m-d h:i:s", time()),															// s
+				'updated_at' => date( "Y-m-d h:i:s", time()),															// s
+				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
+				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
+				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
+				'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
 				'hidden' => 0,				// d
 			),
 			array(
-				'%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d'
+				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
 			)
 		);
 

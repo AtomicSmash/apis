@@ -43,13 +43,7 @@ class atomic_api_twitter {
 
         //$this->setupMenus();
         add_action( 'admin_menu', array( $this, 'setupMenus') );
-
-
 		add_action( 'api_hourly_sync',  array($this,'pull' ));
-
-
-
-
 	}
 
 	/**
@@ -66,7 +60,7 @@ class atomic_api_twitter {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 
-        $table_name = $wpdb->prefix . 'api_twitter';
+        $table_name = $this->api_table;
         $sql = "CREATE TABLE $table_name (
             id BIGINT(20) NOT NULL,
             tweet text,
