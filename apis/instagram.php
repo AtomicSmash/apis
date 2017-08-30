@@ -118,24 +118,55 @@ class atomic_api_instagram {
 
         echo '<div class="wrap">';
 
-			if( !defined('TWITTER_CONSUMER_KEY') ){
 
-				echo '<h2>Instagram API</h2>';
 
-				echo "Looks like you need to add these Constants to your config file:";
+			if( isset( $_GET['code'] ) ){
+
+				echo "<h1>Instagram API setup</h1>";
+
+				echo "<p>Please add this <strong>CODE</strong> constant to your config file. The actual access will be in the current url after '#access_token='</p>";
 
 				echo "<pre>";
-					echo "define('TWITTER_CONSUMER_KEY','');\n";
-					echo "define('TWITTER_CONSUMER_SECRET','');\n";
-					echo "define('TWITTER_OAUTH_TOKEN','');\n";
-					echo "define('TWITTER_OAUTH_TOKEN_SECRET','');";
+					echo "define('INSTAGRAM_ACCESS_TOKEN','xxxxxxxx');";
 				echo "</pre>";
 
-				echo "Once these are in place, come back here to sync your apis";
+				echo "<p>Once this is in place, click here to sync <a href='".admin_url('tools.php?page=atomic_apis_instagram&sync=1')."' class='add-new-h2'>Sync Instagram</a></p>";
 
+				// $redirect_url = admin_url('tools.php?page=atomic_apis_instagram&sync=1');
+
+				// echo "<p>YES! We now have an access code!: ".$_GET['code'].". You now need an Access Token! Click here:<br><br>";
+
+
+				// echo "<p><a href='https://api.instagram.com/oauth/authorize?client_id={$_GET['code']}&redirect_uri={$redirect_url}&scope=basic&response_type=code' class='add-new-h2'>Get access token</a></p>";
+
+			}else if( !defined('INSTAGRAM_ACCESS_TOKEN') ){
+
+				echo "<h1>Instagram API setup</h1>";
+
+				echo "<ol style='font-size:18px;'>";
+					echo "<li>First register an Instagram Application <a href='https://www.instagram.com/developer/'>here</a>. Make sure you use the url of this page as the 'Valid redirect URIs:' during registration.</li>";
+					echo "<li>Once registered, go into the app and click the 'Security' tab. Uncheck 'Disable implicit OAuth', then Save.</li>";
+					echo "<li>At this point you have a Client ID, enter below and hit submit.</li>";
+					echo "<li>You will then be forwared to instagram to authorise. Press 'Authorize'.</li>";
+				echo "</ol>";
+
+				echo "<form action='https://api.instagram.com/oauth/authorize'>";
+
+					echo "<table class='form-table'><tbody>";
+						echo "<tr>";
+							echo "<th scope='row'><label for='blogname'>Client ID</label></th>";
+							echo "<td><input name='client_id' /></td>";
+						echo "</tr>";
+					echo "</tbody></table>";
+
+					echo "<input type='submit' class='button button-primary' />";
+					echo "<input name='redirect_uri' value='".admin_url('tools.php?page=atomic_apis_instagram&code=1')."' type='hidden' />";
+					echo "<input name='scope' value='basic' type='hidden' />";
+					echo "<input name='response_type' value='token' type='hidden' />";
+
+				echo "</form>";
 
 			}else{
-
 
 				if(isset($_GET['sync'])){
 					$this->pull();
@@ -294,35 +325,6 @@ class atomic_api_instagram {
 	 */
     public function pull() {
 
-		// https://www.sitepoint.com/conquering-instagram-with-php-and-the-instagram-api/
-		// https://stackoverflow.com/questions/37496657/how-to-use-instagram-api-with-guzzle-6-and-laravel
-		// https://api.instagram.com/oauth/authorize?client_id={$client_id}&redirect_uri={$redirect_url}&scope=basic&response_type=code
-
-
-		echo "<a href='https://www.instagram.com/developer/'>App page</a>";
-
-		echo "<br>";
-
-		echo "<form action='https://api.instagram.com/oauth/authorize'>";
-
-			echo "<table class='form-table'><tbody>";
-				echo "<tr>";
-					echo "<th scope='row'><label for='blogname'>Client ID</label></th>";
-					echo "<td><input name='client_id' /></td>";
-				echo "</tr>";
-			echo "</tbody></table>";
-
-			echo "<input type='submit' class='button button-primary' />";
-			echo "<input name='redirect_uri' value='".admin_url('tools.php?page=atomic_apis_instagram')."' type='hidden' />";
-			echo "<input name='scope' value='basic' type='hidden' />";
-			echo "<input name='response_type' value='code' type='hidden' />";
-
-		echo "</form>";
-
-
-
-
-
 		$client = new Client();
 
 
@@ -338,7 +340,7 @@ class atomic_api_instagram {
 
 		$response = $client->get('https://api.instagram.com/v1/users/self/media/recent', [
 		    'query' => [
-		        'access_token' => CODE
+		        'access_token' => INSTAGRAM_ACCESS_TOKEN
 		    ]
 		]);
 
@@ -350,63 +352,11 @@ class atomic_api_instagram {
 
 		$results = json_decode($results);
 
-
-
-
-		// id BIGINT(20) NOT NULL,
-		// caption text,
-		// type varchar(30) NOT NULL,
-		// link varchar(130) NOT NULL,
-		// size_150 varchar(200) NOT NULL,
-		// size_320 varchar(200) NOT NULL,
-		// size_640 varchar(200) NOT NULL,
-		// full varchar(200) NOT NULL,
-		// added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-		// echo "<pre>";
-		// print_r($results->data);
-		// echo "</pre>";
-
-
-		foreach($results->data as $feed){
-			// echo "<img src='".$feed->images->standard_resolution->url."' />";
-			// echo $feed->id;
-			// echo "<br>";
-			// echo html_entity_decode(stripslashes(str_replace('_', '', $feed->id ) ), ENT_QUOTES);
-			// echo "<br>";
-			// echo $feed->images->standard_resolution->url;
-			// echo "<br>";
-			// echo $feed->images->low_resolution->url;
-			// echo "<br>";
-			// echo $feed->images->thumbnail->url;
-			// echo "<br>";
-			// echo $feed->created_time;
-			// echo "<br>";
-			// echo $feed->caption->text;
-			// echo "<br>";
-			// echo $feed->link;
-			// echo "<br>";
-			// echo $feed->type;
-			// echo "<hr>";
-
-		};
-		//
-		// die();
-
-		// echo "<pre>";
-		// print_r($results->data);
-		// echo "</pre>";
-
-
-
 		foreach ($results->data as $key => $entry) {
 
 			$this->processEntry($entry);
 
 		};
-
-
-		return $decodedContent;
 
 	}
 
