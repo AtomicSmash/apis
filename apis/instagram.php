@@ -33,12 +33,11 @@ class atomic_api_instagram {
 
 		$this->api_table = $wpdb->prefix . 'api_instagram';
 
-        $this->columns =  array(
-            'tweet'    => 'Tweet',
-            'user_handle'      => 'Username',
-            'user_image'      => 'Profile Image',
-            'user_location'      => 'Location'
-        );
+        $this->columns = array(
+				'thumbnail'    => 'Thumbnail',
+	            'caption'      => 'Caption',
+	            'added'      => 'Added'
+			);
 
 
         //$this->setupMenus();
@@ -62,7 +61,7 @@ class atomic_api_instagram {
 
         $table_name = $this->api_table;
         $sql = "CREATE TABLE $table_name (
-            id INT(20) NOT NULL auto_increment,
+            id varchar(100) NOT NULL,
             caption text,
             type varchar(30) NOT NULL,
 			link varchar(130) NOT NULL,
@@ -261,7 +260,7 @@ class atomic_api_instagram {
 
 		if(count($this->recordArray) > 0){
 			foreach($this->recordArray as $key => $tweet){
-				$this->recordArray[$key]['human_time_ago'] = $this->human_elapsed_time($this->recordArray[$key]['created_at']);
+				$this->recordArray[$key]['human_time_ago'] = $this->human_elapsed_time($this->recordArray[$key]['added_at']);
 			}
 		}
 
@@ -419,10 +418,6 @@ class atomic_api_instagram {
 	 */
 	public function processEntry($entry=array()) {
 
-		echo $entry->id;
-		echo "<hr>";
-
-
 		if($this->exist($entry->id) == true){
 			return $this->updateEntry($entry);
 		}else{
@@ -458,18 +453,9 @@ class atomic_api_instagram {
 		global $wpdb;
 		$wpdb->show_errors();
 
-		// echo "<pre>";
-		// print_r($entry);
-		// echo "</pre>";
-
-
-
-		echo date( "Y-m-d h:i:s", $entry->created_time);
-		echo "<hr>";
-
-
 		$wpdb->insert($this->api_table,
 			array(
+				'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),				// d
 				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
 				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
 				'added_at' => date( "Y-m-d h:i:s", $entry->created_time),									// s
@@ -482,7 +468,7 @@ class atomic_api_instagram {
 				'hidden' => 0,				// d
 			),
 			array(
-				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
+				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'
 			)
 		);
 
@@ -496,24 +482,22 @@ class atomic_api_instagram {
 
 		$wpdb->update($this->api_table,
 			array(
-				'id' => $entry->id,																				// d
-				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'updated_at' => date( "Y-m-d h:i:s", (time())),													// s
-				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
-				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
-				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
-				'user_image' => html_entity_decode(stripslashes($entry->user->profile_image_url), ENT_QUOTES),	// s
-				'user_location' => html_entity_decode(stripslashes($entry->user->location), ENT_QUOTES),		// s
-				'hidden' => 1,																					// d
+				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
+				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
+				'updated_at' => date( "Y-m-d h:i:s", time()),															// s
+				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
+				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
+				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
+				'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
 			),
 			array(
                 'id' => $entry->id
             ),
 			array(
-				'%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d'
+				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
 			),
 			array(
-                '%d'
+                '%s'
             )
 		);
 
@@ -559,11 +543,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
      * wp atomicsmash create_dates_varient todayÊ
      */
     class AS_API_CLI extends WP_CLI_Command {
-
-
         public function sync_instagram($order_id = ""){
-
-
 
         }
     }
@@ -596,12 +576,14 @@ class Atomic_Api_List_Table_Instagram extends WP_List_Table {
             // case 'added_at':
             // case 'user_location':
             // return $item[ $column_name ];
-			case 'user_image':
-			return "<img src='".$item[ $column_name ]."' />";
-			case 'user_handle':
-			return "@".$item[ $column_name ];
-          default:
-            return $item[ $column_name ]; //Show the whole array for troubleshooting purposes
+			case 'thumbnail':
+				return "<a href='".$item[ 'link' ]."' target='_blank'><img src='".$item[ 'size_150' ]."' /></a>";
+			case 'caption':
+				return $item[ $column_name ];
+			case 'added':
+				return $item[ 'human_time_ago' ];
+			default:
+    			return $item[ $column_name ]; //Show the whole array for troubleshooting purposes
         }
 	}
 
@@ -638,7 +620,6 @@ class Atomic_Api_List_Table_Instagram extends WP_List_Table {
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 		$this->items = $data;
 
-
 	}
 
 	/**
@@ -649,15 +630,15 @@ class Atomic_Api_List_Table_Instagram extends WP_List_Table {
 	function get_columns() {
 
 		$columns = array(
-			'tweet'    => 'Tweet',
-            'user_handle'      => 'Username',
-            'user_image'      => 'Profile Image',
-            'user_location'      => 'Location'
+			'thumbnail'    => 'Thumbnail',
+            'caption'      => 'Caption',
+            'added'      => 'Added'
 		);
 
 		return $columns;
 
 	}
+
 
 	public function get_sortable_columns() {
 
