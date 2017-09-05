@@ -427,6 +427,7 @@ class atomic_api {
 			array(
 				'id' => $entry->id,																				// d
 				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
+				'created_at' => date( "Y-m-d H:i:s", strtotime($entry->created_at)),							// s
 				'updated_at' => date( "Y-m-d H:i:s", (time())),													// s
 				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
 				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
