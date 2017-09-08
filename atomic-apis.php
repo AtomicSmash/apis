@@ -26,14 +26,27 @@ include('apis/instagram.php');
 // require 'vendor/autoload.php';
 
 
+// if ( defined( 'WP_CLI' ) && WP_CLI ) {
+//     /**
+//      * Grab info from APIs
+//      *
+//      * wp atomicsmash create_dates_varient todayÊ
+//      */
+//     class AS_API_CLI extends WP_CLI_Command {};
+//
+//     WP_CLI::add_command( 'APIs', 'AS_API_CLI' );
+//
+// }
+
+
 // if( defined('TWITTER_CONSUMER_KEY') && TWITTER_CONSUMER_KEY != "" ){
 $twitter_api = new atomic_api_twitter();
 register_activation_hook( __FILE__, array ( $twitter_api, 'create_table') );
-register_deactivation_hook( __FILE__, array ( $twitter_api, 'delete_table') );
+// register_deactivation_hook( __FILE__, array ( $twitter_api, 'delete_table') );
 // };
 
 // if( defined('INSTAGRAM_ACCESS_TOKEN') && INSTAGRAM_ACCESS_TOKEN != "" ){
 $instagram_api = new atomic_api_instagram();
 register_activation_hook( __FILE__, array ( $instagram_api, 'create_table') );
-register_deactivation_hook( __FILE__, array ( $instagram_api, 'delete_table') );
+// register_deactivation_hook( __FILE__, array ( $instagram_api, 'delete_table') );
 // };

@@ -13,18 +13,6 @@ class atomic_api_instagram {
 	public $totalRecords = 0;
 	public $pageRecords = 0;
 	public $resultsPerPage = 15;
-	//ATOMICTODO - this needs to be dynamic
-	public $api_table = "";
-
-
-	//Variables for later use
-	public $id;
-	public $text;
-	public $created_at;
-	public $user_id;
-	public $user_name;
-	public $user_image;
-	public $user_location;
 
 
 	// Class Constructor
@@ -38,7 +26,6 @@ class atomic_api_instagram {
 	            'caption'      => 'Caption',
 	            'added'      => 'Added'
 			);
-
 
         //$this->setupMenus();
         add_action( 'admin_menu', array( $this, 'setupMenus') );
@@ -81,9 +68,9 @@ class atomic_api_instagram {
 
 	}
 
-	function delete_table() {
-
-	    wp_clear_scheduled_hook('my_hourly_event');
+	// function delete_table() {
+	//
+	//     wp_clear_scheduled_hook('my_hourly_event');
 
 		// global $wpdb;
     	// $charset_collate = $wpdb->get_charset_collate();
@@ -94,15 +81,16 @@ class atomic_api_instagram {
 		//
         // dbDelta( $sql );
 
-		return true;
+	// 	return true;
+	//
+	// }
 
-	}
-	//dynamically declare public variables
-	public function create_variables($name,$value){
-
-		$this->{$name} = $value;
-
-	}
+	// dynamically declare public variables
+	// public function create_variables($name,$value){
+	//
+	// 	$this->{$name} = $value;
+	//
+	// }
 
 
 	// GET Functions
@@ -115,10 +103,7 @@ class atomic_api_instagram {
 
     public function apiListPage() {
 
-
         echo '<div class="wrap">';
-
-
 
 			if( isset( $_GET['code'] ) ){
 
@@ -181,12 +166,7 @@ class atomic_api_instagram {
 
 		    	$placeListTable->prepare_items();
 
-
-
 	            $placeListTable->items = $this->recordArray;
-
-
-
 
 	            //$placeListTable->items = $example_data;
 
@@ -313,9 +293,9 @@ class atomic_api_instagram {
 
 
 
-	public function cronUpdate() {
-		$this->pull();
-	}
+	// public function cronUpdate() {
+	// 	$this->pull();
+	// }
 
 
 
@@ -397,7 +377,6 @@ class atomic_api_instagram {
 	}
 
 
-
     public function insertEntry($entry = array()) {
 
 		global $wpdb;
@@ -405,17 +384,17 @@ class atomic_api_instagram {
 
 		$wpdb->insert($this->api_table,
 			array(
-				'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),				// d
+				'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
 				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
 				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-				'added_at' => date( "Y-m-d h:i:s", $entry->created_time),									// s
-				'created_at' => date( "Y-m-d h:i:s", time()),															// s
-				'updated_at' => date( "Y-m-d h:i:s", time()),															// s
+				'added_at' => date( "Y-m-d H:i:s", $entry->created_time),												// s
+				'created_at' => date( "Y-m-d H:i:s", time()),															// s
+				'updated_at' => date( "Y-m-d H:i:s", time()),															// s
 				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
 				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
 				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
 				'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
-				'hidden' => 0,				// d
+				'hidden' => 0,																							// d
 			),
 			array(
 				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'
@@ -434,7 +413,7 @@ class atomic_api_instagram {
 			array(
 				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
 				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-				'updated_at' => date( "Y-m-d h:i:s", time()),															// s
+				'updated_at' => date( "Y-m-d H:i:s", time()),															// s
 				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
 				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
 				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
@@ -492,15 +471,17 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
      *
      * wp atomicsmash create_dates_varient todayÊ
      */
-    class AS_API_CLI extends WP_CLI_Command {
-        public function sync_instagram($order_id = ""){
+    class AS_API_CLI_INSTAGRAM extends WP_CLI_Command {
+        public function sync_instagram(){
 
         }
     }
 
-    WP_CLI::add_command( 'APIs', 'AS_API_CLI' );
+    WP_CLI::add_command( 'APIs', 'AS_API_CLI_INSTAGRAM' );
 
 }
+
+
 
 
 //Need to sort pagination
@@ -551,7 +532,8 @@ class Atomic_Api_List_Table_Instagram extends WP_List_Table {
 
 		$columns = $this->get_columns();
 		$hidden = array();
-		$sortable = $this->get_sortable_columns();
+		// $sortable = $this->get_sortable_columns();
+		$sortable = array();
 
 		// Get the data
 		$data = $this->table_data();
@@ -588,21 +570,5 @@ class Atomic_Api_List_Table_Instagram extends WP_List_Table {
 		return $columns;
 
 	}
-
-
-	public function get_sortable_columns() {
-
-		// return empty array to block sorting
-		return array();
-
-		// return array(
-		// 	'tweet' => array( 'tweet', false ),
-		// 	'user_handle' => array( 'user_handle', false ),
-		// 	'user_image' => array( 'user_image', false ),
-		// 	'user_location' => array( 'user_location', false )
-		// );
-	}
-
-
 
 }

@@ -111,7 +111,6 @@ class atomic_api_twitter {
 
         add_submenu_page("tools.php", 'Twitter API', 'Twitter API', 'manage_options', 'atomic_apis_twitter', array($this,'apiListPage'));
 
-
 	}
 
 
@@ -385,8 +384,8 @@ class atomic_api_twitter {
 			array(
 				'id' => $entry->id,																				// d
 				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'created_at' => date( "Y-m-d h:i:s", strtotime($entry->created_at)),							// s
-				'updated_at' => date( "Y-m-d h:i:s", time()),													// s
+				'created_at' => date( "Y-m-d H:i:s", strtotime($entry->created_at)),							// s
+				'updated_at' => date( "Y-m-d H:i:s", time()),													// s
 				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
 				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
 				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
@@ -411,7 +410,7 @@ class atomic_api_twitter {
 			array(
 				'id' => $entry->id,																				// d
 				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'updated_at' => date( "Y-m-d h:i:s", (time())),													// s
+				'updated_at' => date( "Y-m-d H:i:s", (time())),													// s
 				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
 				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
 				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
@@ -471,19 +470,16 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
      *
      * wp atomicsmash create_dates_varient todayÊ
      */
-    class AS_API_CLI extends WP_CLI_Command {
-
-
-        public function sync_tweets($order_id = ""){
-
-
+    class AS_API_CLI_TWITTER extends WP_CLI_Command {
+        public function sync_twitter(){
 
         }
     }
 
-    WP_CLI::add_command( 'APIs', 'AS_API_CLI' );
+    WP_CLI::add_command( 'APIs', 'AS_API_CLI_TWITTER' );
 
 }
+
 
 
 //Need to sort pagination
@@ -532,7 +528,8 @@ class Atomic_Api_List_Table_Twitter extends WP_List_Table {
 
 		$columns = $this->get_columns();
 		$hidden = array();
-		$sortable = $this->get_sortable_columns();
+		// $sortable = $this->get_sortable_columns();
+		$sortable = array();
 
 		// Get the data
 		$data = $this->table_data();
@@ -571,20 +568,5 @@ class Atomic_Api_List_Table_Twitter extends WP_List_Table {
 		return $columns;
 
 	}
-
-	public function get_sortable_columns() {
-
-		// return empty array to block sorting
-		return array();
-
-		// return array(
-		// 	'tweet' => array( 'tweet', false ),
-		// 	'user_handle' => array( 'user_handle', false ),
-		// 	'user_image' => array( 'user_image', false ),
-		// 	'user_location' => array( 'user_location', false )
-		// );
-	}
-
-
 
 }

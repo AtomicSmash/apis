@@ -37,5 +37,7 @@ Current arguments include:
 
 ## Todo
 
-- Get API options into the admin interface
+- ~~Get API options into the admin interface~~
 - Have a look at turning the classes and different classes into an 'interface'
+- Work out how to do multiple users / hashtags per API
+- Move from a cron style update to a wp-cli update
