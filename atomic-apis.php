@@ -21,6 +21,7 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
 }
 
+include('apis/atomic_api_base.php');
 include('apis/twitter.php');
 include('apis/instagram.php');
 // require 'vendor/autoload.php';

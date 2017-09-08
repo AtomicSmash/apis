@@ -4,14 +4,13 @@ use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
 
-class atomic_api_instagram extends atomic_api_base {
+class atomic_api_base {
 
-	public $recordArray = array();
+    public $recordArray = array();
 	public $totalRecords = 0;
 	public $pageRecords = 0;
 	public $resultsPerPage = 15;
 
-	// Class Constructor
 	public function __construct() {
 		global $wpdb;
 
@@ -64,12 +63,38 @@ class atomic_api_instagram extends atomic_api_base {
 
 	}
 
+	// function delete_table() {
+	//
+	//     wp_clear_scheduled_hook('my_hourly_event');
+
+		// global $wpdb;
+    	// $charset_collate = $wpdb->get_charset_collate();
+		//
+		//
+        // $table_name = $wpdb->prefix . 'api_twitter';
+        // $sql = "DROP TABLE $table_name";
+		//
+        // dbDelta( $sql );
+
+	// 	return true;
+	//
+	// }
+
+	// dynamically declare public variables
+	// public function create_variables($name,$value){
+	//
+	// 	$this->{$name} = $value;
+	//
+	// }
+
+
 	// GET Functions
 	public function setupMenus() {
 
         add_submenu_page("tools.php", 'Instagram API', 'Instagram API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
 
 	}
+
 
     public function apiListPage() {
 
@@ -179,9 +204,12 @@ class atomic_api_instagram extends atomic_api_base {
         $extra_join = array();
         $groupSql = '';
 
+
         $fields = "*";
 
+
         $mainSql  = "SELECT " . $fields . " FROM " . $this->api_table . " l " . implode(' ',$extra_join);
+
 
         $countSql = "SELECT count(l.question_group_id) FROM " . $this->api_table .  " l ";
         if ($this->resultsPerPage>0) {
@@ -254,7 +282,16 @@ class atomic_api_instagram extends atomic_api_base {
 			$this->totalRecords = $wpdb->get_var($countSql . $whereSql);
 		}
 
+
+
     }
+
+
+
+	// public function cronUpdate() {
+	// 	$this->pull();
+	// }
+
 
 
 	/**
@@ -266,6 +303,16 @@ class atomic_api_instagram extends atomic_api_base {
 		$client = new Client();
 
 
+		// $response = $client->post('https://api.instagram.com/oauth/access_token', array('body' => array(
+        //     'client_id' => CLIENT_ID,
+        //     'client_secret' => CLIENT_SECRET,
+        //     'grant_type' => 'authorization_code',
+        //     'redirect_uri' => REDIRECT_URL,
+        //     'code' => CODE
+        // )));
+		//
+        // $data = $response->json();
+
 		$response = $client->get('https://api.instagram.com/v1/users/self/media/recent', [
 		    'query' => [
 		        'access_token' => INSTAGRAM_ACCESS_TOKEN
@@ -274,6 +321,9 @@ class atomic_api_instagram extends atomic_api_base {
 
 		$results = $response->getBody()->getContents();
 
+		// echo "<pre>";
+		// print_r($results);
+		// echo "</pre>";
 
 		$results = json_decode($results);
 
@@ -286,7 +336,40 @@ class atomic_api_instagram extends atomic_api_base {
 	}
 
 
+	/**
+	 * Process return to see if it already exists
+	 * @param  array  $entry [description]
+	 * @return [type]        [description]
+	 */
+	public function processEntry($entry=array()) {
 
+		if($this->exist($entry->id) == true){
+			return $this->updateEntry($entry);
+		}else{
+			return $this->insertEntry($entry);
+		}
+
+	}
+
+	/**
+	 * Check to see if API entry exists
+	 * @param  string $id API ID
+	 * @return [bool] Returns whether the entry exists
+	 */
+	public function exist($id = "") {
+
+		global $wpdb;
+
+		$result = $wpdb->get_results ("SELECT id FROM ".$this->api_table." WHERE id = '".$id."'");
+
+		if (count ($result) > 0) {
+			//$row = current ($result);
+			return true;
+		} else {
+			return false;
+		}
+
+	}
 
 
     public function insertEntry($entry = array()) {
@@ -345,6 +428,35 @@ class atomic_api_instagram extends atomic_api_base {
 		return "updated";
 	}
 
+	public function human_elapsed_time($datetime, $full = false) {
+	    $now = new DateTime;
+	    $ago = new DateTime($datetime);
+	    $diff = $now->diff($ago);
+
+	    $diff->w = floor($diff->d / 7);
+	    $diff->d -= $diff->w * 7;
+
+	    $string = array(
+	        'y' => 'year',
+	        'm' => 'month',
+	        'w' => 'week',
+	        'd' => 'day',
+	        'h' => 'hour',
+	        'i' => 'minute',
+	        's' => 'second',
+	    );
+	    foreach ($string as $k => &$v) {
+	        if ($diff->$k) {
+	            $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+	        } else {
+	            unset($string[$k]);
+	        }
+	    }
+
+	    if (!$full) $string = array_slice($string, 0, 1);
+	    return $string ? implode(', ', $string) . ' ago' : 'just now';
+	}
+
 }
 
 
@@ -369,7 +481,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 //Need to sort pagination
 
-class Atomic_Api_List_Table_Instagram extends WP_List_Table {
+class Atomic_Api_List_Table extends WP_List_Table {
 
 	// function __construct($columns = array()){
 	//
