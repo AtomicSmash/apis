@@ -147,7 +147,7 @@ class atomic_api_twitter {
 
 		    	$placeListTable = new Atomic_Api_List_Table_Twitter($this->columns);
 
-	            echo '<h2>Twitter API <a href="admin.php?page=atomic_apis&sync=1" class="add-new-h2">Sync</a></h2>';
+	            echo '<h2>Twitter API <a href="admin.php?page=atomic_apis_twitter&sync=1" class="add-new-h2">Sync</a></h2>';
 
 		    	$placeListTable->prepare_items();
 
@@ -315,7 +315,9 @@ class atomic_api_twitter {
 
 		// Pull from hashtag if it's defined
 		if( defined('TWITTER_HASHTAG') ){
-			$response = $client->get('search/tweets.json?q='.urlencode('#futurecity17'), ['auth' => 'oauth']);
+			$response = $client->get('search/tweets.json?q='.urlencode(TWITTER_HASHTAG), ['auth' => 'oauth']);
+			// $response = $client->get('search/tweets.json?q=from%3Ausername', ['auth' => 'oauth']);
+
 			$tweets = $response->getBody()->getContents();
 			$decodedContent = json_decode($tweets);
 			// Search results return a slightly different object
