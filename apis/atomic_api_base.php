@@ -24,6 +24,11 @@ class atomic_api_base {
 	            'added'      => 'Added'
 			);
 
+        if ( defined( 'WP_CLI' ) && WP_CLI ) {
+            WP_CLI::add_command( 'APssIs', function(){
+                WP_CLI::success( $args[0] . ' ' . $assoc_args['append'] );
+            } );
+        };
 
         // $this->setupMenus();
         add_action( 'admin_menu', array( $this, 'setupMenus') );
@@ -36,7 +41,7 @@ class atomic_api_base {
 	 */
 	function create_table() {
 
-
+        echo "asdasd";
 
 	}
 
@@ -235,21 +240,7 @@ class atomic_api_base {
 }
 
 
-if ( defined( 'WP_CLI' ) && WP_CLI ) {
-    /**
-     * Grab info from APIs
-     *
-     * wp atomicsmash create_dates_varient todayÊ
-     */
-    class AS_API_CLI_INSTAGRAM extends WP_CLI_Command {
-        public function sync_instagram(){
 
-        }
-    }
-
-    WP_CLI::add_command( 'APIs', 'AS_API_CLI_INSTAGRAM' );
-
-}
 
 
 

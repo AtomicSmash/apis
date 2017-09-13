@@ -334,25 +334,6 @@ class atomic_api_instagram extends atomic_api_base {
 }
 
 
-if ( defined( 'WP_CLI' ) && WP_CLI ) {
-    /**
-     * Grab info from APIs
-     *
-     * wp atomicsmash create_dates_varient todayÊ
-     */
-    class AS_API_CLI_INSTAGRAM extends WP_CLI_Command {
-        public function sync_instagram(){
-
-        }
-    }
-
-    WP_CLI::add_command( 'APIs', 'AS_API_CLI_INSTAGRAM' );
-
-}
-
-
-
-
 //Need to sort pagination
 
 class Atomic_Api_List_Table_Instagram extends WP_List_Table {
