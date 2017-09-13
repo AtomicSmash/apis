@@ -3,7 +3,7 @@
 Plugin Name: Atomic Smash - APIs
 Plugin URI: http://www.atomicsmash.co.uk
 Description: Pull from APIs like Twitter and Instagram
-Version: 0.0.7
+Version: 0.1.0
 Author: Atomic Smash
 Author URI: n/a
 */
@@ -46,8 +46,21 @@ register_activation_hook( __FILE__, array ( $twitter_api, 'create_table') );
 // register_deactivation_hook( __FILE__, array ( $twitter_api, 'delete_table') );
 // };
 
+
+$insta_variables = [
+    'name' => 'Instagram',
+    'db_table' => $wpdb->prefix . 'api_instagram',
+    'columns' => array(
+        'thumbnail'    => 'Thumbnail',
+        'caption'      => 'Caption',
+        'added'      => 'Added'
+    )
+];
+
+
+
 // if( defined('INSTAGRAM_ACCESS_TOKEN') && INSTAGRAM_ACCESS_TOKEN != "" ){
-$instagram_api = new atomic_api_instagram();
+$instagram_api = new atomic_api_instagram($insta_variables);
 register_activation_hook( __FILE__, array ( $instagram_api, 'create_table') );
 // register_deactivation_hook( __FILE__, array ( $instagram_api, 'delete_table') );
 // };

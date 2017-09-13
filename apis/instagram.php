@@ -12,20 +12,12 @@ class atomic_api_instagram extends atomic_api_base {
 	public $resultsPerPage = 15;
 
 	// Class Constructor
-	public function __construct() {
+	public function __construct($api_details) {
+
 		global $wpdb;
 
-		$this->api_table = $wpdb->prefix . 'api_instagram';
+		parent::__construct( $api_details );
 
-        $this->columns = array(
-				'thumbnail'    => 'Thumbnail',
-	            'caption'      => 'Caption',
-	            'added'      => 'Added'
-			);
-
-        //$this->setupMenus();
-        add_action( 'admin_menu', array( $this, 'setupMenus') );
-		add_action( 'api_hourly_sync',  array($this,'pull' ));
 	}
 
 	/**
@@ -42,7 +34,7 @@ class atomic_api_instagram extends atomic_api_base {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 
-        $table_name = $this->api_table;
+        $table_name = $this->api_details['db_table'];
         $sql = "CREATE TABLE $table_name (
             id varchar(100) NOT NULL,
             caption text,
@@ -64,12 +56,6 @@ class atomic_api_instagram extends atomic_api_base {
 
 	}
 
-	// GET Functions
-	public function setupMenus() {
-
-        add_submenu_page("tools.php", 'Instagram API', 'Instagram API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
-
-	}
 
     public function apiListPage() {
 
@@ -130,7 +116,7 @@ class atomic_api_instagram extends atomic_api_base {
 	            $entries = $this->get();
 
 
-		    	$placeListTable = new Atomic_Api_List_Table_Instagram($this->columns);
+		    	$placeListTable = new Atomic_Api_List_Table_Instagram($api_details['columns']);
 
 	            echo '<h2>Instagram API <a href="tools.php?page=atomic_apis_instagram&sync=1" class="add-new-h2">Sync</a></h2>';
 
@@ -181,9 +167,9 @@ class atomic_api_instagram extends atomic_api_base {
 
         $fields = "*";
 
-        $mainSql  = "SELECT " . $fields . " FROM " . $this->api_table . " l " . implode(' ',$extra_join);
+        $mainSql  = "SELECT " . $fields . " FROM " . $this->api_details['db_table'] . " l " . implode(' ',$extra_join);
 
-        $countSql = "SELECT count(l.question_group_id) FROM " . $this->api_table .  " l ";
+        $countSql = "SELECT count(l.question_group_id) FROM " . $this->api_details['db_table'] .  " l ";
         if ($this->resultsPerPage>0) {
             $limitSql = $wpdb->prepare("LIMIT %d,%d ", $firstResult, $this->resultsPerPage);
         } else {
@@ -294,7 +280,7 @@ class atomic_api_instagram extends atomic_api_base {
 		global $wpdb;
 		$wpdb->show_errors();
 
-		$wpdb->insert($this->api_table,
+		$wpdb->insert($this->api_details['db_table'],
 			array(
 				'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
 				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
@@ -321,7 +307,7 @@ class atomic_api_instagram extends atomic_api_base {
 		global $wpdb;
 		$wpdb->show_errors();
 
-		$wpdb->update($this->api_table,
+		$wpdb->update($this->api_details['db_table'],
 			array(
 				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
 				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s

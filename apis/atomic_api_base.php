@@ -11,10 +11,12 @@ class atomic_api_base {
 	public $pageRecords = 0;
 	public $resultsPerPage = 15;
 
-	public function __construct() {
+	public function __construct($api_details) {
 		global $wpdb;
 
-		$this->api_table = $wpdb->prefix . 'api_instagram';
+        $this->api_details = $api_details;
+
+		// $this->api_table = $this->api_details['db_table'];
 
         $this->columns = array(
 				'thumbnail'    => 'Thumbnail',
@@ -22,9 +24,10 @@ class atomic_api_base {
 	            'added'      => 'Added'
 			);
 
-        //$this->setupMenus();
+
+        // $this->setupMenus();
         add_action( 'admin_menu', array( $this, 'setupMenus') );
-		add_action( 'api_hourly_sync',  array($this,'pull' ));
+		// add_action( 'api_hourly_sync',  array($this,'pull' ));
 	}
 
 	/**
@@ -33,65 +36,15 @@ class atomic_api_base {
 	 */
 	function create_table() {
 
-		wp_schedule_event( time(), 'hourly', 'api_hourly_sync' );
 
-    	global $wpdb;
-    	$charset_collate = $wpdb->get_charset_collate();
-
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-
-
-        $table_name = $this->api_table;
-        $sql = "CREATE TABLE $table_name (
-            id varchar(100) NOT NULL,
-            caption text,
-            type varchar(30) NOT NULL,
-			link varchar(130) NOT NULL,
-			size_150 varchar(200) NOT NULL,
-			size_320 varchar(200) NOT NULL,
-			size_640 varchar(200) NOT NULL,
-            added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL,
-            hidden BOOLEAN NOT NULL,
-    		UNIQUE KEY id (id)
-    	) $charset_collate;";
-
-        dbDelta( $sql );
-
-		return true;
 
 	}
-
-	// function delete_table() {
-	//
-	//     wp_clear_scheduled_hook('my_hourly_event');
-
-		// global $wpdb;
-    	// $charset_collate = $wpdb->get_charset_collate();
-		//
-		//
-        // $table_name = $wpdb->prefix . 'api_twitter';
-        // $sql = "DROP TABLE $table_name";
-		//
-        // dbDelta( $sql );
-
-	// 	return true;
-	//
-	// }
-
-	// dynamically declare public variables
-	// public function create_variables($name,$value){
-	//
-	// 	$this->{$name} = $value;
-	//
-	// }
 
 
 	// GET Functions
 	public function setupMenus() {
 
-        add_submenu_page("tools.php", 'Instagram API', 'Instagram API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
+        add_submenu_page("tools.php", $this->api_details['name'].' API', $this->api_details['name'].' API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
 
 	}
 
@@ -182,106 +135,6 @@ class atomic_api_base {
 
 
     public function get($query_args=array()) {
-        global $wpdb;
-
-        $default_args['results_per_page'] = $this->resultsPerPage;
-        $default_args['page'] = 1;
-        $default_args['keyword'] = '';
-        $default_args['orderby'] = 'id';
-        $default_args['order'] = 'desc';
-
-
-
-        // Merge query args with defaults, keeping only items that have keys in defaults
-        $query_args = array_intersect_key($query_args + $default_args, $default_args);
-
-        // Pagination
-        $this->resultsPerPage = $query_args['results_per_page'];
-
-        $firstResult = (int)($query_args['page']-1) * $this->resultsPerPage;
-
-        $whereSqlLines = array();
-        $extra_join = array();
-        $groupSql = '';
-
-
-        $fields = "*";
-
-
-        $mainSql  = "SELECT " . $fields . " FROM " . $this->api_table . " l " . implode(' ',$extra_join);
-
-
-        $countSql = "SELECT count(l.question_group_id) FROM " . $this->api_table .  " l ";
-        if ($this->resultsPerPage>0) {
-            $limitSql = $wpdb->prepare("LIMIT %d,%d ", $firstResult, $this->resultsPerPage);
-        } else {
-            $limitSql = "";
-        }
-
-        //$whereSqlLines[] = $wpdb->prepare("l.somthing='%d'", $query_args['id']);
-        //$whereSqlLines[] = "";
-
-        // Text search filter
-        if ($query_args['keyword']) {
-            $search_terms = explode(' ',$query_args['keyword']);
-            foreach ($search_terms as $search_term) {
-                if (is_numeric($search_term)) {
-                    $innerWhere[] = $wpdb->prepare( "(l.field1 LIKE '%s' OR l.field2 LIKE '%s' OR l.field3 = %d)",
-                        '%' . $search_term . '%',
-                        '%' . $search_term . '%',
-                        $search_term );
-                } else {
-                    $innerWhere[] = $wpdb->prepare( "(l.field1 LIKE '%s' OR l.field2 LIKE '%s')",
-                        '%' . $search_term . '%',
-                        '%' . $search_term . '%');
-                }
-            }
-            $whereSqlLines[] = '(' . implode(" OR ", $innerWhere) . ')';
-        }
-
-        $whereSql = "";
-        if ($whereSqlLines) {
-			echo "where triggered";
-            $whereSql = 'WHERE ' . implode(' AND ',$whereSqlLines) . ' ';
-        }
-
-        // Sort Order
-        $orderSql = 'ORDER BY ' . $query_args['orderby'] . ' ' . strtoupper($query_args['order']) . ' ';
-
-        $fullSql = $mainSql . ' ' . $whereSql . ' ' . $groupSql . ' ' . $orderSql . ' ' .$limitSql;
-
-		// echo $whereSql."<br>";
-		//echo $fullSql;
-		//
-		// echo "<pre>";
-		// print_r($whereSqlLines);
-		// echo "</pre>";
-
-
-
-		$wpdb->show_errors();
-        $this->recordArray = $wpdb->get_results($fullSql , 'ARRAY_A');
-		// $this->recordArray = $wpdb->get_results($fullSql);
-
-
-		if(count($this->recordArray) > 0){
-			foreach($this->recordArray as $key => $tweet){
-				$this->recordArray[$key]['human_time_ago'] = $this->human_elapsed_time($this->recordArray[$key]['added_at']);
-			}
-		}
-
-		return $this->recordArray;
-
-        $this->pageRecords = count($this->recordArray);
-
-		// If we have fewer than the max records on the first page, we can use that as the total
-		if ($page=0 && ($this->pageRecords < $this->resultsPerPage)) {
-			$this->totalRecords = $this->pageRecords;
-		} else {
-			// Otherwise we need to work it out
-			$this->totalRecords = $wpdb->get_var($countSql . $whereSql);
-		}
-
 
 
     }
@@ -300,38 +153,6 @@ class atomic_api_base {
 	 */
     public function pull() {
 
-		$client = new Client();
-
-
-		// $response = $client->post('https://api.instagram.com/oauth/access_token', array('body' => array(
-        //     'client_id' => CLIENT_ID,
-        //     'client_secret' => CLIENT_SECRET,
-        //     'grant_type' => 'authorization_code',
-        //     'redirect_uri' => REDIRECT_URL,
-        //     'code' => CODE
-        // )));
-		//
-        // $data = $response->json();
-
-		$response = $client->get('https://api.instagram.com/v1/users/self/media/recent', [
-		    'query' => [
-		        'access_token' => INSTAGRAM_ACCESS_TOKEN
-		    ]
-		]);
-
-		$results = $response->getBody()->getContents();
-
-		// echo "<pre>";
-		// print_r($results);
-		// echo "</pre>";
-
-		$results = json_decode($results);
-
-		foreach ($results->data as $key => $entry) {
-
-			$this->processEntry($entry);
-
-		};
 
 	}
 
@@ -360,7 +181,7 @@ class atomic_api_base {
 
 		global $wpdb;
 
-		$result = $wpdb->get_results ("SELECT id FROM ".$this->api_table." WHERE id = '".$id."'");
+		$result = $wpdb->get_results ("SELECT id FROM ".$this->api_details['db_table']." WHERE id = '".$id."'");
 
 		if (count ($result) > 0) {
 			//$row = current ($result);
@@ -374,58 +195,12 @@ class atomic_api_base {
 
     public function insertEntry($entry = array()) {
 
-		global $wpdb;
-		$wpdb->show_errors();
 
-		$wpdb->insert($this->api_table,
-			array(
-				'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
-				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
-				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-				'added_at' => date( "Y-m-d H:i:s", $entry->created_time),												// s
-				'created_at' => date( "Y-m-d H:i:s", time()),															// s
-				'updated_at' => date( "Y-m-d H:i:s", time()),															// s
-				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
-				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
-				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
-				'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
-				'hidden' => 0,																							// d
-			),
-			array(
-				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'
-			)
-		);
-
-		return "added";
 	}
 
 	public function updateEntry($entry = array()) {
 
-		global $wpdb;
-		$wpdb->show_errors();
 
-		$wpdb->update($this->api_table,
-			array(
-				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
-				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-				'updated_at' => date( "Y-m-d H:i:s", time()),															// s
-				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
-				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
-				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
-				'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
-			),
-			array(
-                'id' => $entry->id
-            ),
-			array(
-				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
-			),
-			array(
-                '%s'
-            )
-		);
-
-		return "updated";
 	}
 
 	public function human_elapsed_time($datetime, $full = false) {
