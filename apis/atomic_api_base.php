@@ -25,8 +25,11 @@ class atomic_api_base {
 			);
 
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
-            WP_CLI::add_command( 'APssIs', function(){
+            WP_CLI::add_command( 'API_TEST', function($args){
+
+                // Success testing
                 WP_CLI::success( $args[0] . ' ' . $assoc_args['append'] );
+
             } );
         };
 
@@ -41,98 +44,44 @@ class atomic_api_base {
 	 */
 	function create_table() {
 
-        echo "asdasd";
-
 	}
 
 
 	// GET Functions
 	public function setupMenus() {
-
         add_submenu_page("tools.php", $this->api_details['name'].' API', $this->api_details['name'].' API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
-
 	}
-
 
     public function apiListPage() {
 
         echo '<div class="wrap">';
 
-			if( isset( $_GET['code'] ) ){
+			if(isset($_GET['sync'])){
+				$this->pull();
+			};
 
-				echo "<h1>Instagram API setup</h1>";
-
-				echo "<p>Please add this <strong>CODE</strong> constant to your config file. The actual access will be in the current url after '#access_token='</p>";
-
-				echo "<pre>";
-					echo "define('INSTAGRAM_ACCESS_TOKEN','xxxxxxxx');";
-				echo "</pre>";
-
-				echo "<p>Once this is in place, click here to sync <a href='".admin_url('tools.php?page=atomic_apis_instagram&sync=1')."' class='add-new-h2'>Sync Instagram</a></p>";
-
-				// $redirect_url = admin_url('tools.php?page=atomic_apis_instagram&sync=1');
-
-				// echo "<p>YES! We now have an access code!: ".$_GET['code'].". You now need an Access Token! Click here:<br><br>";
+            $entries = $this->get();
 
 
-				// echo "<p><a href='https://api.instagram.com/oauth/authorize?client_id={$_GET['code']}&redirect_uri={$redirect_url}&scope=basic&response_type=code' class='add-new-h2'>Get access token</a></p>";
+	    	$placeListTable = new Atomic_Api_List_Table($this->columns);
 
-			}else if( !defined('INSTAGRAM_ACCESS_TOKEN') ){
+            echo '<h2>Title <a href="tools.php?page=atomic_apis_ ADD THIS &sync=1" class="add-new-h2">Sync</a></h2>';
 
-				echo "<h1>Instagram API setup</h1>";
+	    	$placeListTable->prepare_items();
 
-				echo "<ol style='font-size:18px;'>";
-					echo "<li>First register an Instagram Application <a href='https://www.instagram.com/developer/'>here</a>. Make sure you use the url of this page as the 'Valid redirect URIs:' during registration.</li>";
-					echo "<li>Once registered, go into the app and click the 'Security' tab. Uncheck 'Disable implicit OAuth', then Save.</li>";
-					echo "<li>At this point you have a Client ID, enter below and hit submit.</li>";
-					echo "<li>You will then be forwared to instagram to authorise. Press 'Authorize'.</li>";
-				echo "</ol>";
+            $placeListTable->items = $this->recordArray;
 
-				echo "<form action='https://api.instagram.com/oauth/authorize'>";
+            //$placeListTable->items = $example_data;
 
-					echo "<table class='form-table'><tbody>";
-						echo "<tr>";
-							echo "<th scope='row'><label for='blogname'>Client ID</label></th>";
-							echo "<td><input name='client_id' /></td>";
-						echo "</tr>";
-					echo "</tbody></table>";
-
-					echo "<input type='submit' class='button button-primary' />";
-					echo "<input name='redirect_uri' value='".admin_url('tools.php?page=atomic_apis_instagram&code=1')."' type='hidden' />";
-					echo "<input name='scope' value='basic' type='hidden' />";
-					echo "<input name='response_type' value='token' type='hidden' />";
-
-				echo "</form>";
-
-			}else{
-
-				if(isset($_GET['sync'])){
-					$this->pull();
-				};
-
-	            $entries = $this->get();
-
-
-		    	$placeListTable = new Atomic_Api_List_Table_Instagram($this->columns);
-
-	            echo '<h2>Instagram API <a href="tools.php?page=atomic_apis_instagram&sync=1" class="add-new-h2">Sync</a></h2>';
-
-		    	$placeListTable->prepare_items();
-
-	            $placeListTable->items = $this->recordArray;
-
-	            //$placeListTable->items = $example_data;
-
-				?>
-				<form id="items-filter" method="get">
-					<input type="hidden" name="page" value="<?php echo $_REQUEST['page'] ?>"/>
-					<?php
-					// Now we can render the completed list table
-					$placeListTable->display();
-	                ?>
-				</form>
+			?>
+			<form id="items-filter" method="get">
+				<input type="hidden" name="page" value="<?php echo $_REQUEST['page'] ?>"/>
 				<?php
-			}
+				// Now we can render the completed list table
+				$placeListTable->display();
+                ?>
+			</form>
+			<?php
 
 		echo '</div>';
 
@@ -143,12 +92,6 @@ class atomic_api_base {
 
 
     }
-
-
-
-	// public function cronUpdate() {
-	// 	$this->pull();
-	// }
 
 
 
@@ -197,17 +140,6 @@ class atomic_api_base {
 
 	}
 
-
-    public function insertEntry($entry = array()) {
-
-
-	}
-
-	public function updateEntry($entry = array()) {
-
-
-	}
-
 	public function human_elapsed_time($datetime, $full = false) {
 	    $now = new DateTime;
 	    $ago = new DateTime($datetime);
@@ -237,11 +169,28 @@ class atomic_api_base {
 	    return $string ? implode(', ', $string) . ' ago' : 'just now';
 	}
 
+
+    // -------------------------------------------------------------------------
+    // ------------------------- Overridable functions -------------------------
+    // -------------------------------------------------------------------------
+
+
+    /**
+     * Insert an entry
+     */
+    public function insertEntry($entry = array()) {
+        die( 'function must be over-ridden in a sub-class.' );
+	}
+
+    /**
+     * Update an entry
+     */
+	public function updateEntry($entry = array()) {
+        die( 'function must be over-ridden in a sub-class.' );
+	}
+
+
 }
-
-
-
-
 
 
 
@@ -249,19 +198,23 @@ class atomic_api_base {
 
 class Atomic_Api_List_Table extends WP_List_Table {
 
-	// function __construct($columns = array()){
-	//
-    //     $this->columns = $columns;
-	//
-    //     parent::__construct( array(
-	// 		'singular'  => 'item',  //singular name of the listed records
-	// 		'plural'    => 'items', //plural name of the listed records
-	// 		'ajax'      => false    //does this table support ajax?
-	// 	) );
-	//
-	// }
+    public $columns = array();
 
-	//Setup column defaults
+	function __construct($columns = array()){
+
+        parent::__construct( array(
+			'singular'  => 'item',  //singular name of the listed records
+			'plural'    => 'items', //plural name of the listed records
+			'ajax'      => false    //does this table support ajax?
+		) );
+
+
+        $this->columns = $columns;
+
+	}
+
+
+	// This should contain all the defaults for ALL the different APIs
 	function column_default($item, $column_name){
         switch( $column_name ) {
 			// case 'tweet':
@@ -315,20 +268,9 @@ class Atomic_Api_List_Table extends WP_List_Table {
 
 	}
 
-	/**
-	 * Override the parent columns method. Defines the columns to use in your listing table
-	 *
-	 * @return Array $columns, the array of columns to use with the table
-	 */
 	function get_columns() {
 
-		$columns = array(
-			'thumbnail'    => 'Thumbnail',
-            'caption'      => 'Caption',
-            'added'      => 'Added'
-		);
-
-		return $columns;
+		return $this->columns;
 
 	}
 

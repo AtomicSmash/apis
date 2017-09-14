@@ -14,8 +14,6 @@ class atomic_api_instagram extends atomic_api_base {
 	// Class Constructor
 	public function __construct($api_details) {
 
-		global $wpdb;
-
 		parent::__construct( $api_details );
 
 	}
@@ -25,8 +23,6 @@ class atomic_api_instagram extends atomic_api_base {
 	 * @return bool yet reurn isn't used
 	 */
 	function create_table() {
-
-		wp_schedule_event( time(), 'hourly', 'api_hourly_sync' );
 
     	global $wpdb;
     	$charset_collate = $wpdb->get_charset_collate();
@@ -73,12 +69,6 @@ class atomic_api_instagram extends atomic_api_base {
 
 				echo "<p>Once this is in place, click here to sync <a href='".admin_url('tools.php?page=atomic_apis_instagram&sync=1')."' class='add-new-h2'>Sync Instagram</a></p>";
 
-				// $redirect_url = admin_url('tools.php?page=atomic_apis_instagram&sync=1');
-
-				// echo "<p>YES! We now have an access code!: ".$_GET['code'].". You now need an Access Token! Click here:<br><br>";
-
-
-				// echo "<p><a href='https://api.instagram.com/oauth/authorize?client_id={$_GET['code']}&redirect_uri={$redirect_url}&scope=basic&response_type=code' class='add-new-h2'>Get access token</a></p>";
 
 			}else if( !defined('INSTAGRAM_ACCESS_TOKEN') ){
 
@@ -116,7 +106,14 @@ class atomic_api_instagram extends atomic_api_base {
 	            $entries = $this->get();
 
 
-		    	$placeListTable = new Atomic_Api_List_Table_Instagram($api_details['columns']);
+				// echo "<pre>";
+				// print_r($this->columns);
+				// echo "</pre>";
+
+				// die('step 1');
+
+
+		    	$placeListTable = new Atomic_Api_List_Table($this->columns);
 
 	            echo '<h2>Instagram API <a href="tools.php?page=atomic_apis_instagram&sync=1" class="add-new-h2">Sync</a></h2>';
 
@@ -251,7 +248,6 @@ class atomic_api_instagram extends atomic_api_base {
 
 		$client = new Client();
 
-
 		$response = $client->get('https://api.instagram.com/v1/users/self/media/recent', [
 		    'query' => [
 		        'access_token' => INSTAGRAM_ACCESS_TOKEN
@@ -259,7 +255,6 @@ class atomic_api_instagram extends atomic_api_base {
 		]);
 
 		$results = $response->getBody()->getContents();
-
 
 		$results = json_decode($results);
 
@@ -329,96 +324,6 @@ class atomic_api_instagram extends atomic_api_base {
 		);
 
 		return "updated";
-	}
-
-}
-
-
-//Need to sort pagination
-
-class Atomic_Api_List_Table_Instagram extends WP_List_Table {
-
-	// function __construct($columns = array()){
-	//
-    //     $this->columns = $columns;
-	//
-    //     parent::__construct( array(
-	// 		'singular'  => 'item',  //singular name of the listed records
-	// 		'plural'    => 'items', //plural name of the listed records
-	// 		'ajax'      => false    //does this table support ajax?
-	// 	) );
-	//
-	// }
-
-	//Setup column defaults
-	function column_default($item, $column_name){
-        switch( $column_name ) {
-			// case 'tweet':
-            // case 'added_at':
-            // case 'user_location':
-            // return $item[ $column_name ];
-			case 'thumbnail':
-				return "<a href='".$item[ 'link' ]."' target='_blank'><img src='".$item[ 'size_150' ]."' /></a>";
-			case 'caption':
-				return $item[ $column_name ];
-			case 'added':
-				return $item[ 'human_time_ago' ];
-			default:
-    			return $item[ $column_name ]; //Show the whole array for troubleshooting purposes
-        }
-	}
-
-
-	/**
-	 * Prepare the items for the table to process
-	 */
-	function prepare_items() {
-        //Get api items from Atomic_Api_Entry_List
-
-        // $columns = $this->columns;
-        // $hidden = array();
-        // $sortable = array();
-        // $this->_column_headers = array($columns, $hidden, $sortable);
-
-		$columns = $this->get_columns();
-		$hidden = array();
-		// $sortable = $this->get_sortable_columns();
-		$sortable = array();
-
-		// Get the data
-		$data = $this->table_data();
-		// usort( $data, array( &$this, 'sort_data' ) );
-
-		$items_per_page = 100;
-		$currentPage = $this->get_pagenum();
-		$total_items = count($data);
-
-		$this->set_pagination_args( array(
-			'total_items' => $total_items,
-			'per_page'    => $items_per_page
-		) );
-
-		// $data = array_slice( $data, ( ($currentPage - 1 ) * $items_per_page ), $items_per_page );
-		$this->_column_headers = array( $columns, $hidden, $sortable );
-		$this->items = $data;
-
-	}
-
-	/**
-	 * Override the parent columns method. Defines the columns to use in your listing table
-	 *
-	 * @return Array $columns, the array of columns to use with the table
-	 */
-	function get_columns() {
-
-		$columns = array(
-			'thumbnail'    => 'Thumbnail',
-            'caption'      => 'Caption',
-            'added'      => 'Added'
-		);
-
-		return $columns;
-
 	}
 
 }
