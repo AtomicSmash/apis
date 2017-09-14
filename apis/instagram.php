@@ -4,6 +4,21 @@ use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
 use \WeDevs\ORM\Eloquent\Facades\DB;
+use Illuminate\Database\Capsule\Manager as Capsule;
+
+global $wpdb;
+
+
+// $db = \WeDevs\ORM\Eloquent\Database::instance();
+// class qb_answers extends Model {}
+//
+// $user_answers = qb_answers::select('id', 'answer', 'question_id', 'seconds', 'flagged')
+//             ->where('user_id', '=', $user_id)
+//             ->where('test_id', '=', $test_id)
+//             ->where('test_complete', '=', NULL)
+//             ->get()
+//             ->toArray();
+
 
 class atomic_api_instagram extends atomic_api_base {
 
@@ -17,38 +32,9 @@ class atomic_api_instagram extends atomic_api_base {
 
 		parent::__construct( $api_details );
 
-	}
-
-	function create_table() {
-
-    	global $wpdb;
-    	$charset_collate = $wpdb->get_charset_collate();
-
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-
-
-        $table_name = $this->api_details['db_table'];
-        $sql = "CREATE TABLE $table_name (
-            id varchar(100) NOT NULL,
-            caption text,
-            type varchar(30) NOT NULL,
-			link varchar(130) NOT NULL,
-			size_150 varchar(200) NOT NULL,
-			size_320 varchar(200) NOT NULL,
-			size_640 varchar(200) NOT NULL,
-            added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL,
-            hidden BOOLEAN NOT NULL,
-    		UNIQUE KEY id (id)
-    	) $charset_collate;";
-
-        dbDelta( $sql );
-
-		return true;
+		// $this->create_table();
 
 	}
-
 
     public function apiListPage() {
 
@@ -136,18 +122,50 @@ class atomic_api_instagram extends atomic_api_base {
 
     }
 
+	function create_table() {
+
+    	global $wpdb;
+
+		$this->capsule_connect();
+
+		try {
+			Capsule::schema()->create(
+				$wpdb->prefix.'api_instagram',
+				function ($table) {
+
+					$table->string('id',100);
+					$table->text('caption');
+					$table->string('type',30);
+					$table->string('link',130);
+					$table->string('size_150',200);
+					$table->string('size_320',200);
+					$table->string('size_640',200);
+					$table->timestamp('added_at')->nullable();
+					$table->timestamp('updated_at')->nullable();
+					$table->timestamp('created_at')->nullable();
+					$table->boolean('hidden');
+
+					$table->unique('id');
+				}
+			);
+		} catch (\Exception $e) {
+			echo "Unable to create table: {$e->getMessage()}";
+		}
+
+		return true;
+
+	}
+
 
     public function get($query_args=array()) {
 
 		$records = DB::table('api_instagram')->orderBy('id', 'desc')->take(10)->get();
-
 
 		if(count($records) > 0){
 			foreach($records as $key => $record){
 				$record->human_time_ago = $this->human_elapsed_time($record->added_at);
 			}
 		}
-
 
 		// Convert object to Array
 		$records = array_map(function($val){
@@ -189,27 +207,42 @@ class atomic_api_instagram extends atomic_api_base {
 
     public function insertEntry($entry = array()) {
 
-		global $wpdb;
-		$wpdb->show_errors();
+		// global $wpdb;
+		// $wpdb->show_errors();
+		//
+		// $wpdb->insert($this->api_details['db_table'],
+		// 	array(
+		// 		'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
+		// 		'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
+		// 		'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
+		// 		'added_at' => date( "Y-m-d H:i:s", $entry->created_time),												// s
+		// 		'created_at' => date( "Y-m-d H:i:s", time()),															// s
+		// 		'updated_at' => date( "Y-m-d H:i:s", time()),															// s
+		// 		'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
+		// 		'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
+		// 		'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
+		// 		'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
+		// 		'hidden' => 0,																							// d
+		// 	),
+		// 	array(
+		// 		'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'
+		// 	)
+		// );
 
-		$wpdb->insert($this->api_details['db_table'],
-			array(
-				'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
-				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
-				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-				'added_at' => date( "Y-m-d H:i:s", $entry->created_time),												// s
-				'created_at' => date( "Y-m-d H:i:s", time()),															// s
-				'updated_at' => date( "Y-m-d H:i:s", time()),															// s
-				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
-				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
-				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
-				'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
-				'hidden' => 0,																							// d
-			),
-			array(
-				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'
-			)
-		);
+		$records = DB::table('api_instagram')->insert([
+			'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
+			'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
+			'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
+			'added_at' => date( "Y-m-d H:i:s", $entry->created_time),												// s
+			'created_at' => date( "Y-m-d H:i:s", time()),															// s
+			'updated_at' => date( "Y-m-d H:i:s", time()),															// s
+			'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
+			'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
+			'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
+			'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
+			'hidden' => 0,																							// d
+        ]);
+
 
 		return "added";
 	}

@@ -3,6 +3,8 @@
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
+use \WeDevs\ORM\Eloquent\Facades\DB;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class atomic_api_base {
 
@@ -38,7 +40,31 @@ class atomic_api_base {
 		// add_action( 'api_hourly_sync',  array($this,'pull' ));
 	}
 
-	// GET Functions
+	public function capsule_connect() {
+
+        global $wpdb;
+
+        $capsule = new Capsule;
+        $capsule->addConnection(array(
+        	'driver' => 'mysql',
+        	'host' => DB_HOST,
+        	'database' => DB_NAME,
+        	'username' => DB_USER,
+        	'password' => DB_PASSWORD,
+        	'charset' => $wpdb->charset,
+        	'collation' => $wpdb->collate,
+        	'prefix' => ''
+        ));
+
+        $capsule->setAsGlobal();
+        $capsule->bootEloquent();
+
+        return $capsule;
+
+	}
+
+
+
 	public function setupMenus() {
         add_submenu_page("tools.php", $this->api_details['name'].' API', $this->api_details['name'].' API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
 	}
