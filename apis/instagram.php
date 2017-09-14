@@ -159,21 +159,23 @@ class atomic_api_instagram extends atomic_api_base {
 
     public function get($query_args=array()) {
 
-		$records = DB::table('api_instagram')->orderBy('id', 'desc')->take(10)->get();
+		// Get some entries
+		$entries = DB::table('api_instagram')->orderBy('id', 'desc')->take(10)->get();
 
-		if(count($records) > 0){
-			foreach($records as $key => $record){
-				$record->human_time_ago = $this->human_elapsed_time($record->added_at);
+		// Loop through the entries and insert a human readable time
+		if(count($entries) > 0){
+			foreach($entries as $key => $entry){
+				$entry->human_time_ago = $this->human_elapsed_time($entry->added_at);
 			}
 		}
 
-		// Convert object to Array
-		$records = array_map(function($val){
+		// Convert entries objects into Array
+		$entries_array = array_map(function($val){
 		    return json_decode(json_encode($val), true);
-		}, $records);
+		}, $entries);
 
 
-		return $records;
+		return $entries_array;
 
     }
 
@@ -204,76 +206,53 @@ class atomic_api_instagram extends atomic_api_base {
 
 	}
 
+	public function processEntry( $new_entry=array() ) {
 
-    public function insertEntry($entry = array()) {
+        $current_entry = DB::table('api_instagram')->where('id',$new_entry->id)->get();
 
-		// global $wpdb;
-		// $wpdb->show_errors();
-		//
-		// $wpdb->insert($this->api_details['db_table'],
-		// 	array(
-		// 		'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
-		// 		'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
-		// 		'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-		// 		'added_at' => date( "Y-m-d H:i:s", $entry->created_time),												// s
-		// 		'created_at' => date( "Y-m-d H:i:s", time()),															// s
-		// 		'updated_at' => date( "Y-m-d H:i:s", time()),															// s
-		// 		'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
-		// 		'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
-		// 		'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
-		// 		'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
-		// 		'hidden' => 0,																							// d
-		// 	),
-		// 	array(
-		// 		'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d'
-		// 	)
-		// );
+		if(empty($current_entry)){
+			// return $this->insertEntry($new_entry);
+		}else{
+			return $this->updateEntry($new_entry, $current_entry);
+
+		}
+
+	}
+
+    public function insertEntry($new_entry = array()) {
+
 
 		$records = DB::table('api_instagram')->insert([
-			'id' => html_entity_decode(stripslashes($entry->id), ENT_QUOTES),										// d
-			'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
-			'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-			'added_at' => date( "Y-m-d H:i:s", $entry->created_time),												// s
+			'id' => html_entity_decode(stripslashes($new_entry->id), ENT_QUOTES),										// d
+			'caption' => html_entity_decode(stripslashes($new_entry->caption->text), ENT_QUOTES),						// s
+			'type' => html_entity_decode(stripslashes($new_entry->type), ENT_QUOTES),									// s
+			'added_at' => date( "Y-m-d H:i:s", $new_entry->created_time),												// s
 			'created_at' => date( "Y-m-d H:i:s", time()),															// s
 			'updated_at' => date( "Y-m-d H:i:s", time()),															// s
-			'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
-			'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
-			'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
-			'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
+			'link' => html_entity_decode(stripslashes($new_entry->link), ENT_QUOTES),									// s
+			'size_150' => html_entity_decode(stripslashes($new_entry->images->thumbnail->url), ENT_QUOTES),				// s
+			'size_320' => html_entity_decode(stripslashes($new_entry->images->low_resolution->url), ENT_QUOTES),		// s
+			'size_640' => html_entity_decode(stripslashes($new_entry->images->standard_resolution->url), ENT_QUOTES),	// s
 			'hidden' => 0,																							// d
         ]);
-
 
 		return "added";
 	}
 
-	public function updateEntry($entry = array()) {
+	public function updateEntry($new_entry = array(), $current_entry = array()) {
 
-		global $wpdb;
-		$wpdb->show_errors();
+		$current_entry = DB::table('api_instagram')->where('id',$new_entry->id)->update([
+			'caption' => html_entity_decode(stripslashes($new_entry->caption->text), ENT_QUOTES),						// s
+			'type' => html_entity_decode(stripslashes($new_entry->type), ENT_QUOTES),									// s
+			'updated_at' => date( "Y-m-d H:i:s", time()),															// s
+			'link' => html_entity_decode(stripslashes($new_entry->link), ENT_QUOTES),									// s
+			'size_150' => html_entity_decode(stripslashes($new_entry->images->thumbnail->url), ENT_QUOTES),				// s
+			'size_320' => html_entity_decode(stripslashes($new_entry->images->low_resolution->url), ENT_QUOTES),		// s
+			'size_640' => html_entity_decode(stripslashes($new_entry->images->standard_resolution->url), ENT_QUOTES),	// s
+            ]);
 
-		$wpdb->update($this->api_details['db_table'],
-			array(
-				'caption' => html_entity_decode(stripslashes($entry->caption->text), ENT_QUOTES),						// s
-				'type' => html_entity_decode(stripslashes($entry->type), ENT_QUOTES),									// s
-				'updated_at' => date( "Y-m-d H:i:s", time()),															// s
-				'link' => html_entity_decode(stripslashes($entry->link), ENT_QUOTES),									// s
-				'size_150' => html_entity_decode(stripslashes($entry->images->thumbnail->url), ENT_QUOTES),				// s
-				'size_320' => html_entity_decode(stripslashes($entry->images->low_resolution->url), ENT_QUOTES),		// s
-				'size_640' => html_entity_decode(stripslashes($entry->images->standard_resolution->url), ENT_QUOTES),	// s
-			),
-			array(
-                'id' => $entry->id
-            ),
-			array(
-				'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
-			),
-			array(
-                '%s'
-            )
-		);
+		return true;
 
-		return "updated";
 	}
 
 }

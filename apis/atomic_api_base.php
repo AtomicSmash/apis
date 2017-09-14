@@ -102,40 +102,6 @@ class atomic_api_base {
 
     }
 
-	/**
-	 * Process return to see if it already exists
-	 * @param  array  $entry [description]
-	 * @return [type]        [description]
-	 */
-	public function processEntry($entry=array()) {
-
-		if($this->exist($entry->id) == true){
-			return $this->updateEntry($entry);
-		}else{
-			return $this->insertEntry($entry);
-		}
-
-	}
-
-	/**
-	 * Check to see if API entry exists
-	 * @param  string $id API ID
-	 * @return [bool] Returns whether the entry exists
-	 */
-	public function exist($id = "") {
-
-		global $wpdb;
-
-		$result = $wpdb->get_results ("SELECT id FROM ".$this->api_details['db_table']." WHERE id = '".$id."'");
-
-		if (count ($result) > 0) {
-			//$row = current ($result);
-			return true;
-		} else {
-			return false;
-		}
-
-	}
 
 	public function human_elapsed_time($datetime, $full = false) {
 	    $now = new DateTime;
@@ -168,14 +134,20 @@ class atomic_api_base {
 
 
     // -------------------------------------------------------------------------
-    // ------------------------- Overridable functions -------------------------
+    // --------------------------- Overridables --------------------------------
     // -------------------------------------------------------------------------
-
 
     /**
      * Create DB table
      */
 	function create_table() {
+        die( 'function must be over-ridden in a sub-class.' );
+	}
+
+    /**
+     * Check if Entry exists
+     */
+	public function processEntry($entry=array()) {
         die( 'function must be over-ridden in a sub-class.' );
 	}
 
