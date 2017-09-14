@@ -3,6 +3,7 @@
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
+use \WeDevs\ORM\Eloquent\Facades\DB;
 
 class atomic_api_instagram extends atomic_api_base {
 
@@ -18,10 +19,6 @@ class atomic_api_instagram extends atomic_api_base {
 
 	}
 
-	/**
-	 * Setup table for API
-	 * @return bool yet reurn isn't used
-	 */
 	function create_table() {
 
     	global $wpdb;
@@ -103,11 +100,12 @@ class atomic_api_instagram extends atomic_api_base {
 					$this->pull();
 				};
 
-	            $entries = $this->get();
+
+	            $records = $this->get();
 
 
 				// echo "<pre>";
-				// print_r($this->columns);
+				// print_r($entries);
 				// echo "</pre>";
 
 				// die('step 1');
@@ -119,7 +117,7 @@ class atomic_api_instagram extends atomic_api_base {
 
 		    	$placeListTable->prepare_items();
 
-	            $placeListTable->items = $this->recordArray;
+	            $placeListTable->items = $records;
 
 	            //$placeListTable->items = $example_data;
 
@@ -140,102 +138,24 @@ class atomic_api_instagram extends atomic_api_base {
 
 
     public function get($query_args=array()) {
-        global $wpdb;
 
-        $default_args['results_per_page'] = $this->resultsPerPage;
-        $default_args['page'] = 1;
-        $default_args['keyword'] = '';
-        $default_args['orderby'] = 'id';
-        $default_args['order'] = 'desc';
+		$records = DB::table('api_instagram')->orderBy('id', 'desc')->take(10)->get();
 
 
-
-        // Merge query args with defaults, keeping only items that have keys in defaults
-        $query_args = array_intersect_key($query_args + $default_args, $default_args);
-
-        // Pagination
-        $this->resultsPerPage = $query_args['results_per_page'];
-
-        $firstResult = (int)($query_args['page']-1) * $this->resultsPerPage;
-
-        $whereSqlLines = array();
-        $extra_join = array();
-        $groupSql = '';
-
-        $fields = "*";
-
-        $mainSql  = "SELECT " . $fields . " FROM " . $this->api_details['db_table'] . " l " . implode(' ',$extra_join);
-
-        $countSql = "SELECT count(l.question_group_id) FROM " . $this->api_details['db_table'] .  " l ";
-        if ($this->resultsPerPage>0) {
-            $limitSql = $wpdb->prepare("LIMIT %d,%d ", $firstResult, $this->resultsPerPage);
-        } else {
-            $limitSql = "";
-        }
-
-        //$whereSqlLines[] = $wpdb->prepare("l.somthing='%d'", $query_args['id']);
-        //$whereSqlLines[] = "";
-
-        // Text search filter
-        if ($query_args['keyword']) {
-            $search_terms = explode(' ',$query_args['keyword']);
-            foreach ($search_terms as $search_term) {
-                if (is_numeric($search_term)) {
-                    $innerWhere[] = $wpdb->prepare( "(l.field1 LIKE '%s' OR l.field2 LIKE '%s' OR l.field3 = %d)",
-                        '%' . $search_term . '%',
-                        '%' . $search_term . '%',
-                        $search_term );
-                } else {
-                    $innerWhere[] = $wpdb->prepare( "(l.field1 LIKE '%s' OR l.field2 LIKE '%s')",
-                        '%' . $search_term . '%',
-                        '%' . $search_term . '%');
-                }
-            }
-            $whereSqlLines[] = '(' . implode(" OR ", $innerWhere) . ')';
-        }
-
-        $whereSql = "";
-        if ($whereSqlLines) {
-			echo "where triggered";
-            $whereSql = 'WHERE ' . implode(' AND ',$whereSqlLines) . ' ';
-        }
-
-        // Sort Order
-        $orderSql = 'ORDER BY ' . $query_args['orderby'] . ' ' . strtoupper($query_args['order']) . ' ';
-
-        $fullSql = $mainSql . ' ' . $whereSql . ' ' . $groupSql . ' ' . $orderSql . ' ' .$limitSql;
-
-		// echo $whereSql."<br>";
-		//echo $fullSql;
-		//
-		// echo "<pre>";
-		// print_r($whereSqlLines);
-		// echo "</pre>";
-
-
-
-		$wpdb->show_errors();
-        $this->recordArray = $wpdb->get_results($fullSql , 'ARRAY_A');
-		// $this->recordArray = $wpdb->get_results($fullSql);
-
-
-		if(count($this->recordArray) > 0){
-			foreach($this->recordArray as $key => $tweet){
-				$this->recordArray[$key]['human_time_ago'] = $this->human_elapsed_time($this->recordArray[$key]['added_at']);
+		if(count($records) > 0){
+			foreach($records as $key => $record){
+				$record->human_time_ago = $this->human_elapsed_time($record->added_at);
 			}
 		}
 
-		return $this->recordArray;
 
-        $this->pageRecords = count($this->recordArray);
+		// Convert object to Array
+		$records = array_map(function($val){
+		    return json_decode(json_encode($val), true);
+		}, $records);
 
-		// If we have fewer than the max records on the first page, we can use that as the total
-		if ($page=0 && ($this->pageRecords < $this->resultsPerPage)) {
-			$this->totalRecords = $this->pageRecords;
-		} else {
-			// Otherwise we need to work it out
-			$this->totalRecords = $wpdb->get_var($countSql . $whereSql);
-		}
+
+		return $records;
 
     }
 
@@ -265,9 +185,6 @@ class atomic_api_instagram extends atomic_api_base {
 		};
 
 	}
-
-
-
 
 
     public function insertEntry($entry = array()) {

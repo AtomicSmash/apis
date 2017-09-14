@@ -38,15 +38,6 @@ class atomic_api_base {
 		// add_action( 'api_hourly_sync',  array($this,'pull' ));
 	}
 
-	/**
-	 * Setup table for API
-	 * @return bool yet reurn isn't used
-	 */
-	function create_table() {
-
-	}
-
-
 	// GET Functions
 	public function setupMenus() {
         add_submenu_page("tools.php", $this->api_details['name'].' API', $this->api_details['name'].' API', 'manage_options', 'atomic_apis_instagram', array($this,'apiListPage'));
@@ -60,18 +51,16 @@ class atomic_api_base {
 				$this->pull();
 			};
 
+            echo '<h2>Title <a href="tools.php?page=atomic_apis_ ADD THIS &sync=1" class="add-new-h2">Sync</a></h2>';
+
             $entries = $this->get();
 
-
 	    	$placeListTable = new Atomic_Api_List_Table($this->columns);
-
-            echo '<h2>Title <a href="tools.php?page=atomic_apis_ ADD THIS &sync=1" class="add-new-h2">Sync</a></h2>';
 
 	    	$placeListTable->prepare_items();
 
             $placeListTable->items = $this->recordArray;
 
-            //$placeListTable->items = $example_data;
 
 			?>
 			<form id="items-filter" method="get">
@@ -86,24 +75,6 @@ class atomic_api_base {
 		echo '</div>';
 
     }
-
-
-    public function get($query_args=array()) {
-
-
-    }
-
-
-
-	/**
-	 * Call API for results, then process
-	 * @return [type] [description]
-	 */
-    public function pull() {
-
-
-	}
-
 
 	/**
 	 * Process return to see if it already exists
@@ -176,6 +147,13 @@ class atomic_api_base {
 
 
     /**
+     * Create DB table
+     */
+	function create_table() {
+        die( 'function must be over-ridden in a sub-class.' );
+	}
+
+    /**
      * Insert an entry
      */
     public function insertEntry($entry = array()) {
@@ -186,6 +164,18 @@ class atomic_api_base {
      * Update an entry
      */
 	public function updateEntry($entry = array()) {
+        die( 'function must be over-ridden in a sub-class.' );
+	}
+
+
+    public function get($query_args=array()) {
+        die( 'function must be over-ridden in a sub-class.' );
+    }
+
+    /**
+     * Pull from external API
+     */
+    public function pull() {
         die( 'function must be over-ridden in a sub-class.' );
 	}
 

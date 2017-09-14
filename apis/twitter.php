@@ -43,7 +43,13 @@ class atomic_api_twitter {
 
         //$this->setupMenus();
         add_action( 'admin_menu', array( $this, 'setupMenus') );
+
+
 		add_action( 'api_hourly_sync',  array($this,'pull' ));
+
+
+
+
 	}
 
 	/**
@@ -60,7 +66,7 @@ class atomic_api_twitter {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 
-        $table_name = $this->api_table;
+        $table_name = $wpdb->prefix . 'api_twitter';
         $sql = "CREATE TABLE $table_name (
             id BIGINT(20) NOT NULL,
             tweet text,
@@ -109,7 +115,7 @@ class atomic_api_twitter {
 	// GET Functions
 	public function setupMenus() {
 
-        add_submenu_page("tools.php", 'Twitter API', 'Twitter API', 'manage_options', 'atomic_apis_twitter', array($this,'apiListPage'));
+        add_submenu_page("atomic_apis", 'Twitter', 'Twitter', 'edit_posts', 'atomic_apis', array($this,'apiListPage'));
 
 	}
 
@@ -147,10 +153,16 @@ class atomic_api_twitter {
 
 		    	$placeListTable = new Atomic_Api_List_Table_Twitter($this->columns);
 
-	            echo '<h2>Twitter API <a href="admin.php?page=atomic_apis_twitter&sync=1" class="add-new-h2">Sync</a></h2>';
+	            echo '<h2>Twitter API <a href="admin.php?page=atomic_apis&sync=1" class="add-new-h2">Sync</a></h2>';
 
 		    	$placeListTable->prepare_items();
 
+				?>
+				<!-- <form method="get"> -->
+					<!-- <input type="hidden" name="page" value="<?php //echo $_REQUEST['page'] ?>"/> -->
+					<?php //$placeListTable->search_box( 'Search', 'your-element-id' ); ?>
+				<!-- </form> -->
+				<?php
 
 
 	            $placeListTable->items = $this->recordArray;
@@ -315,24 +327,26 @@ class atomic_api_twitter {
 
 		// Pull from hashtag if it's defined
 		if( defined('TWITTER_HASHTAG') ){
-			$response = $client->get('search/tweets.json?q='.urlencode(TWITTER_HASHTAG), ['auth' => 'oauth']);
-			// $response = $client->get('search/tweets.json?q=from%3Ausername', ['auth' => 'oauth']);
-
-			$tweets = $response->getBody()->getContents();
-			$decodedContent = json_decode($tweets);
-			// Search results return a slightly different object
-			$decodedContent = $decodedContent->statuses;
+			$response = $client->get('search/tweets.json?q='.urlencode('#futurecity17'), ['auth' => 'oauth']);
 		}else{
 			$response = $client->get('statuses/user_timeline.json', ['auth' => 'oauth']);
-			$tweets = $response->getBody()->getContents();
-			$decodedContent = json_decode($tweets);
 		}
+
+		$tweets = $response->getBody()->getContents();
+
+		$decodedContent = json_decode($tweets);
+
+
 
 		foreach ($decodedContent as $key => $entry) {
 
 			$this->processEntry($entry);
 
 		};
+
+		// echo "<pre>";
+		// print_r(json_decode($tweets));
+		// echo "</pre>";
 
 		return $decodedContent;
 
@@ -386,8 +400,8 @@ class atomic_api_twitter {
 			array(
 				'id' => $entry->id,																				// d
 				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'created_at' => date( "Y-m-d H:i:s", strtotime($entry->created_at)),							// s
-				'updated_at' => date( "Y-m-d H:i:s", time()),													// s
+				'created_at' => date( "Y-m-d h:i:s", strtotime($entry->created_at)),							// s
+				'updated_at' => date( "Y-m-d h:i:s", time()),													// s
 				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
 				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
 				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
@@ -412,7 +426,7 @@ class atomic_api_twitter {
 			array(
 				'id' => $entry->id,																				// d
 				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'updated_at' => date( "Y-m-d H:i:s", (time())),													// s
+				'updated_at' => date( "Y-m-d h:i:s", (time())),													// s
 				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
 				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
 				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
@@ -472,33 +486,37 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
      *
      * wp atomicsmash create_dates_varient todayÊ
      */
-    class AS_API_CLI_TWITTER extends WP_CLI_Command {
-        public function sync_twitter(){
+    class AS_API_CLI extends WP_CLI_Command {
+
+
+        public function sync_tweets($order_id = ""){
+
+
 
         }
     }
 
-    WP_CLI::add_command( 'APIs', 'AS_API_CLI_TWITTER' );
+    WP_CLI::add_command( 'APIs', 'AS_API_CLI' );
 
 }
 
 
-
+//Use this page as a ref: http://wpengineer.com/2426/wp_list_table-a-step-by-step-guide/
 //Need to sort pagination
 
 class Atomic_Api_List_Table_Twitter extends WP_List_Table {
 
-	// function __construct($columns = array()){
-	//
-    //     $this->columns = $columns;
-	//
-    //     parent::__construct( array(
-	// 		'singular'  => 'item',  //singular name of the listed records
-	// 		'plural'    => 'items', //plural name of the listed records
-	// 		'ajax'      => false    //does this table support ajax?
-	// 	) );
-	//
-	// }
+	function __construct($columns = array()){
+
+        $this->columns = $columns;
+
+        parent::__construct( array(
+			'singular'  => 'item',  //singular name of the listed records
+			'plural'    => 'items', //plural name of the listed records
+			'ajax'      => false    //does this table support ajax?
+		) );
+
+	}
 
 	//Setup column defaults
 	function column_default($item, $column_name){
@@ -517,57 +535,14 @@ class Atomic_Api_List_Table_Twitter extends WP_List_Table {
 	}
 
 
-	/**
-	 * Prepare the items for the table to process
-	 */
+	// Prep data for display
 	function prepare_items() {
         //Get api items from Atomic_Api_Entry_List
 
-        // $columns = $this->columns;
-        // $hidden = array();
-        // $sortable = array();
-        // $this->_column_headers = array($columns, $hidden, $sortable);
-
-		$columns = $this->get_columns();
-		$hidden = array();
-		// $sortable = $this->get_sortable_columns();
-		$sortable = array();
-
-		// Get the data
-		$data = $this->table_data();
-		// usort( $data, array( &$this, 'sort_data' ) );
-
-		$items_per_page = 100;
-		$currentPage = $this->get_pagenum();
-		$total_items = count($data);
-
-		$this->set_pagination_args( array(
-			'total_items' => $total_items,
-			'per_page'    => $items_per_page
-		) );
-
-		// $data = array_slice( $data, ( ($currentPage - 1 ) * $items_per_page ), $items_per_page );
-		$this->_column_headers = array( $columns, $hidden, $sortable );
-		$this->items = $data;
-
-
-	}
-
-	/**
-	 * Override the parent columns method. Defines the columns to use in your listing table
-	 *
-	 * @return Array $columns, the array of columns to use with the table
-	 */
-	function get_columns() {
-
-		$columns = array(
-			'tweet'    => 'Tweet',
-            'user_handle'      => 'Username',
-            'user_image'      => 'Profile Image',
-            'user_location'      => 'Location'
-		);
-
-		return $columns;
+        $columns = $this->columns;
+        $hidden = array();
+        $sortable = array();
+        $this->_column_headers = array($columns, $hidden, $sortable);
 
 	}
 
