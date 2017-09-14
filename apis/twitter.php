@@ -400,8 +400,8 @@ class atomic_api_twitter {
 			array(
 				'id' => $entry->id,																				// d
 				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'created_at' => date( "Y-m-d h:i:s", strtotime($entry->created_at)),							// s
-				'updated_at' => date( "Y-m-d h:i:s", time()),													// s
+				'created_at' => date( "Y-m-d H:i:s", strtotime($entry->created_at)),							// s
+				'updated_at' => date( "Y-m-d H:i:s", time()),													// s
 				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
 				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
 				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
@@ -426,7 +426,8 @@ class atomic_api_twitter {
 			array(
 				'id' => $entry->id,																				// d
 				'tweet' => html_entity_decode(stripslashes($entry->text), ENT_QUOTES),							// s
-				'updated_at' => date( "Y-m-d h:i:s", (time())),													// s
+				'created_at' => date( "Y-m-d H:i:s", strtotime($entry->created_at)),							// s
+				'updated_at' => date( "Y-m-d H:i:s", (time())),													// s
 				'user_id' => html_entity_decode($entry->user->id,ENT_QUOTES),									// d
 				'user_name' => html_entity_decode(stripslashes($entry->user->name), ENT_QUOTES),				// s
 				'user_handle' => html_entity_decode(stripslashes($entry->user->screen_name), ENT_QUOTES),		// s
