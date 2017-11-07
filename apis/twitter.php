@@ -492,7 +492,9 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 
         public function sync_tweets($order_id = ""){
-
+			global $twitterAPI;
+			
+			$twitterAPI->pull();
 
 
         }

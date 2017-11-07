@@ -8,7 +8,7 @@ Author: Atomic Smash
 Author URI: n/a
 */
 
-global $action, $wpdb;
+global $action, $wpdb, $twitterAPI;
 
 function register_session(){
     if( !session_id() )
