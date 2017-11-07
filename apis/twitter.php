@@ -274,6 +274,9 @@ class atomic_api {
 		if(count($this->recordArray) > 0){
 			foreach($this->recordArray as $key => $tweet){
 				$this->recordArray[$key]['human_time_ago'] = $this->human_elapsed_time($this->recordArray[$key]['created_at']);
+				$this->recordArray[$key]['tweet_with_links'] = $this->linkify($this->recordArray[$key]['tweet']);
+
+
 			}
 		}
 
@@ -293,6 +296,20 @@ class atomic_api {
 
     }
 
+	public function linkify($tweet) {
+
+	  //Convert urls to <a> links
+	  $tweet = preg_replace("/([\w]+\:\/\/[\w-?&;#~=\.\/\@]+[\w\/])/", "<a target=\"_blank\" href=\"$1\">$1</a>", $tweet);
+
+	  //Convert hashtags to twitter searches in <a> links
+	  $tweet = preg_replace("/#([A-Za-z0-9\/\.]*)/", "<a target=\"_new\" href=\"http://twitter.com/search?q=$1\">#$1</a>", $tweet);
+
+	  //Convert attags to twitter profiles in <a> links
+	  $tweet = preg_replace("/@([A-Za-z0-9\/\.]*)/", "<a href=\"http://www.twitter.com/$1\">@$1</a>", $tweet);
+
+	  return $tweet;
+
+	}
 
 
 	public function cronUpdate() {
@@ -493,7 +510,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
         public function sync_tweets($order_id = ""){
 			global $twitterAPI;
-			
+
 			$twitterAPI->pull();
 
 
